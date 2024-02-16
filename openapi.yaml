@@ -16,33 +16,33 @@ openapi: 3.0.3
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 info:
-  version: 1.0.0
-  title: App template API
-  description: API to access and configure the app template
+  version: 1.1.0
+  title: Booking App
+  description: API to access and configure the Booking App
 externalDocs:
-  description: Find out more about the app template
-  url: https://github.com/eliona-smart-building-assistant/app-template
+  description: Booking App documentation
+  url: https://doc.eliona.io/collection/eliona-apps/apps/booking
 servers:
-  - url: http://template/v1
+  - url: http://booking/v1
 
 tags:
   - name: Configuration
     description: Configure the app
     externalDocs:
-      url: https://github.com/eliona-smart-building-assistant/app-template
+      url: https://github.com/eliona-smart-building-assistant/booking-app
 
   - name: Version
     description: API version
     externalDocs:
-      url: https://github.com/eliona-smart-building-assistant/app-template
+      url: https://github.com/eliona-smart-building-assistant/booking-app
 
-  - name: Customization
-    description: Help to customize Eliona environment
+  - name: Booking
+    description: Booking resources
     externalDocs:
-      url: https://github.com/eliona-smart-building-assistant/app-template
+      url: https://github.com/eliona-smart-building-assistant/booking-app
 
 paths:
-  /configurations:
+  /configs:
     get:
       tags:
         - Configuration
@@ -57,7 +57,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Configuration'
+                  $ref: "#/components/schemas/Configuration"
     post:
       tags:
         - Configuration
@@ -68,14 +68,66 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Configuration'
+              $ref: "#/components/schemas/Configuration"
       responses:
         "201":
           description: Successfully created a configuration
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Configuration'
+                $ref: "#/components/schemas/Configuration"
+
+  /configs/{config-id}:
+    get:
+      tags:
+        - Configuration
+      summary: Get configuration
+      description: Gets information about the configuration with the given id
+      parameters:
+        - $ref: "#/components/parameters/config-id"
+      operationId: getConfigurationById
+      responses:
+        "200":
+          description: Successfully returned configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Configuration"
+        "400":
+          description: Bad request
+    put:
+      tags:
+        - Configuration
+      summary: Updates a configuration
+      description: Updates a configuration
+      parameters:
+        - $ref: "#/components/parameters/config-id"
+      operationId: putConfigurationById
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Configuration"
+      responses:
+        "200":
+          description: Successfully updated a configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Configuration"
+    delete:
+      tags:
+        - Configuration
+      summary: Deletes a configuration
+      description: Removes information about the configuration with the given id
+      parameters:
+        - $ref: "#/components/parameters/config-id"
+      operationId: deleteConfigurationById
+      responses:
+        "204":
+          description: Successfully deleted configured configuration
+        "400":
+          description: Bad request
 
   /version:
     get:
@@ -107,53 +159,228 @@ paths:
               schema:
                 type: object
 
-  /dashboard-templates/{dashboard-template-name}:
+  /bookings:
     get:
       tags:
-        - Customization
-      summary: Get a full dashboard template
-      description: Delivers a dashboard template which can assigned to users in Eliona
-      externalDocs:
-        description: The API to assign the dashboard to users in Eliona (see post /dashboards endpoint).
-        url: https://github.com/eliona-smart-building-assistant/eliona-api
-      operationId: getDashboardTemplateByName
+        - Booking
+      summary: List bookings
       parameters:
-        - name: dashboard-template-name
-          in: path
-          description: Name of the dashboard template
-          required: true
-          schema:
-            type: string
-            example: Template
-        - name: projectId
+        - name: start
           in: query
-          description: Define the project the dashboard should be
+          description: The start datetime for querying bookings in ISO 8601 format.
           required: true
           schema:
             type: string
-            example: 99
+            # format: date-time currently not properly generated by OpenAPI generator
+            example: "2023-01-01T09:00:00Z"
+        - name: end
+          in: query
+          description: The end datetime for querying bookings in ISO 8601 format.
+          required: true
+          schema:
+            type: string
+            # format: date-time currently not properly generated by OpenAPI generator
+            example: "2023-01-01T18:00:00Z"
+        - name: assetId
+          in: query
+          description: The ID of the asset for which bookings are being queried.
+          required: true
+          schema:
+            type: string
       responses:
         "200":
-          description: Successfully returned dashboard template
+          description: A list of bookings.
           content:
             application/json:
               schema:
-                $ref: 'https://raw.githubusercontent.com/eliona-smart-building-assistant/eliona-api/main/openapi.yaml#/components/schemas/Dashboard'
+                type: array
+                items:
+                  $ref: "#/components/schemas/Booking"
+    post:
+      tags:
+        - Booking
+      summary: Create a booking
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBookingRequest"
+      responses:
+        "201":
+          description: Booking created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Booking"
+        "400":
+          description: Bad request (e.g., validation errors).
+
+  /bookings/{bookingId}/delete:
+    post:
+      tags:
+        - Booking
+      summary: Cancel a booking
+      parameters:
+        - name: bookingId
+          in: path
+          description: The booking ID obtained in the list of bookings.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteBookingRequest"
+      responses:
+        "204":
+          description: Booking cancelled successfully.
         "404":
-          description: Template name not found
+          description: Booking not found.
+
+  /bookings/{bookingId}/registerGuest:
+    post:
+      tags:
+        - Booking
+      summary: Notify event organizer that a guest came for the event.
+      parameters:
+        - name: bookingId
+          in: path
+          description: The ID of the booking for which a guest has arrived.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                notificationRecipient:
+                  type: string
+                  description: The Eliona user to send the message to.
+                messageEn:
+                  type: string
+                  description: The content of the message to be sent to the organizer.
+                messageDe:
+                  type: string
+                  description: The content of the message to be sent to the organizer.
+                messageFr:
+                  type: string
+                  description: The content of the message to be sent to the organizer.
+                messageIt:
+                  type: string
+                  description: The content of the message to be sent to the organizer.
+              required:
+                - messageEn
+      responses:
+        "204":
+          description: Guest registered.
+        "404":
+          description: Booking not found.
+        "400":
+          description: Bad request - Eliona user not found.
 
 components:
+  parameters:
+    config-id:
+      name: config-id
+      in: path
+      description: The id of the config
+      example: 4711
+      required: true
+      schema:
+        type: integer
+        format: int64
+        example: 4711
   schemas:
     Configuration:
       type: object
-      description: Simply a example configuration
+      description: Configuration.
       properties:
         id:
           type: integer
           format: int64
-          description: A id identifying the example configuration
+          description: Internal identifier for the configured API (created automatically).
           readOnly: true
           nullable: true
-        config:
+        enable:
+          type: boolean
+          description: Flag to enable or disable fetching from this API
+          default: true
+          nullable: true
+        active:
+          type: boolean
+          readOnly: true
+          description: Set to `true` by the app when running and to `false` when app is stopped
+          nullable: true
+        projectIDs:
+          type: array
+          description: List of Eliona project ids for which this device should collect data.
+          nullable: true
+          items:
+            type: string
+          example:
+            - "42"
+            - "99"
+
+    Booking:
+      type: object
+      properties:
+        id:
           type: string
-          description: Configuration data for example
+          description: The booking ID.
+        start:
+          type: string
+          format: date-time
+          description: The start datetime of the booking in ISO 8601 format.
+          example: "2023-01-01T09:00:00Z"
+        end:
+          type: string
+          format: date-time
+          description: The end datetime of the booking in ISO 8601 format.
+          example: "2023-01-01T18:00:00Z"
+        organizerID:
+          type: string
+          description: The ID (email) of the organizer.
+        organizerName:
+          type: string
+          description: The name of the organizer.
+    CreateBookingRequest:
+      type: object
+      properties:
+        deviceCode:
+          type: string
+          description: Device code obtained from authorization
+          example: "3L10NA9Q7"
+        start:
+          type: string
+          description: The start datetime of the booking in ISO 8601 format.
+          example: "2023-01-01T09:00:00Z"
+        end:
+          type: string
+          description: The end datetime of the booking in ISO 8601 format.
+          example: "2023-01-01T18:00:00Z"
+        eventName:
+          type: string
+          description: The name of the event. (Optional)
+        description:
+          type: string
+          description: A description of the event or booking. (Optional)
+      required:
+        - deviceCode
+        - start
+        - end
+    DeleteBookingRequest:
+      type: object
+      properties:
+        deviceCode:
+          type: string
+          description: Device code obtained from authorization
+          example: "3L10NA9Q7"
+      required:
+        - deviceCode
+        - bookingId

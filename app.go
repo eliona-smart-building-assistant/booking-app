@@ -39,7 +39,7 @@ func listenApi() {
 		apiserver.NewRouter(
 			apiserver.NewConfigurationAPIController(apiservices.NewConfigurationApiService()),
 			apiserver.NewVersionAPIController(apiservices.NewVersionApiService()),
-			apiserver.NewCustomizationAPIController(apiservices.NewCustomizationApiService()),
+			apiserver.NewBookingAPIController(apiservices.NewBookingAPIService()),
 		)),
 	)
 	log.Fatal("main", "API server: %v", err)
