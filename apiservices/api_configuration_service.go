@@ -16,10 +16,10 @@
 package apiservices
 
 import (
+	"booking-app/apiserver"
 	"context"
 	"errors"
 	"net/http"
-	"template/apiserver"
 )
 
 // ConfigurationApiService is a service that implements the logic for the ConfigurationApiServicer
@@ -82,7 +82,6 @@ func (s *ConfigurationApiService) PostConfiguration(ctx context.Context, configu
 
 	return apiserver.Response(http.StatusNotImplemented, nil), errors.New("PostConfiguration method not implemented")
 }
-
 
 // PutConfigurationById - Updates a configuration
 func (s *ConfigurationApiService) PutConfigurationById(ctx context.Context, configId int64, configuration apiserver.Configuration) (apiserver.ImplResponse, error) {

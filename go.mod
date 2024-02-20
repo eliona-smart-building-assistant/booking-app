@@ -1,4 +1,4 @@
-module template
+module booking-app
 
 go 1.20
 

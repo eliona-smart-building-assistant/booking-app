@@ -16,9 +16,9 @@
 package main
 
 import (
+	"booking-app/apiserver"
+	"booking-app/apiservices"
 	"net/http"
-	"template/apiserver"
-	"template/apiservices"
 
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	utilshttp "github.com/eliona-smart-building-assistant/go-utils/http"
