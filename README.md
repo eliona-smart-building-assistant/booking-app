@@ -1,10 +1,6 @@
-# App Template
+# Booking app
 
-This template is a part of the Eliona App SDK. It can be used to create an app stub for an Eliona environment.
-
-## Configuration
-
-The app needs environment variables and database tables for configuration. To edit the database tables the app provides an own API access.
+This app allows managing booking of Eliona resources. It provides an API for external apps to allow synchronization with other services.
 
 
 ### Registration in Eliona ###
@@ -15,8 +11,6 @@ This initialization can be handled by the `reset.sql` script.
 
 
 ### Environment variables
-
-<mark>Todo: Describe further environment variables tables the app needs for configuration</mark>
 
 - `CONNECTION_STRING`: configures the [Eliona database](https://github.com/eliona-smart-building-assistant/go-eliona/tree/main/db). Otherwise, the app can't be initialized and started. (e.g. `postgres://user:pass@localhost:5432/iot`)
 
@@ -30,13 +24,9 @@ This initialization can be handled by the `reset.sql` script.
 
 ### Database tables ###
 
-<mark>Todo: Describe the database objects the app needs for configuration</mark>
+The app requires configuration data that remains in the database. To do this, the app creates its own database schema `booking` during initialization. To modify and handle the configuration data the app provides an API access. Have a look at the [API specification](https://eliona-smart-building-assistant.github.io/open-api-docs/?https://raw.githubusercontent.com/eliona-smart-building-assistant/booking-app/develop/openapi.yaml) how the configuration tables should be used.
 
-<mark>Todo: Decide if the app uses its own data and which data should be accessible from outside the app. This is always the case with configuration data. If so, the app needs its own API server to provide access to this data. To define the API use an openapi.yaml file and generators to build the server stub.</mark>
-
-The app requires configuration data that remains in the database. To do this, the app creates its own database schema `template` during initialization. To modify and handle the configuration data the app provides an API access. Have a look at the [API specification](https://eliona-smart-building-assistant.github.io/open-api-docs/?https://raw.githubusercontent.com/eliona-smart-building-assistant/app-template/develop/openapi.yaml) how the configuration tables should be used.
-
-- `template.example_table`: <mark>Todo: Describe the database table in short.</mark>
+- `booking.example_table`: <mark>Todo: Describe the database table in short.</mark>
 
 **Generation**: to generate access method to database see Generation section below.
 
@@ -47,7 +37,7 @@ The app requires configuration data that remains in the database. To do this, th
 
 The app provides its own API to access configuration data and other functions. The full description of the API is defined in the `openapi.yaml` OpenAPI definition file.
 
-- [API Reference](https://eliona-smart-building-assistant.github.io/open-api-docs/?https://raw.githubusercontent.com/eliona-smart-building-assistant/app-template/develop/openapi.yaml) shows Details of the API
+- [API Reference](https://eliona-smart-building-assistant.github.io/open-api-docs/?https://raw.githubusercontent.com/eliona-smart-building-assistant/booking-app/develop/openapi.yaml) shows Details of the API
 
 **Generation**: to generate api server stub see Generation section below.
 
