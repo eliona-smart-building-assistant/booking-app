@@ -15,6 +15,21 @@
 
 create schema if not exists booking;
 
---
--- Todo: create tables and database objects necessary for this app like tables persisting configuration
---
+create table booking.event (
+    id serial primary key,
+    title varchar(255) not null,
+    description text not null,
+    organizer text not null,
+    start_time timestamp with time zone not null,
+    end_time timestamp with time zone not null,
+    created_at timestamp with time zone not null default current_timestamp,
+    cancelled_at timestamp with time zone
+);
+
+create table booking.event_resource (
+    event_id int not null references booking.event(id),
+    asset_id int not null,
+    primary key (event_id, asset_id)
+);
+
+commit;
