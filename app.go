@@ -18,9 +18,14 @@ package main
 import (
 	"booking-app/apiserver"
 	"booking-app/apiservices"
+	"context"
 	"net/http"
 
+	"github.com/eliona-smart-building-assistant/go-eliona/app"
+	"github.com/eliona-smart-building-assistant/go-eliona/asset"
+	"github.com/eliona-smart-building-assistant/go-eliona/dashboard"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
+	"github.com/eliona-smart-building-assistant/go-utils/db"
 	utilshttp "github.com/eliona-smart-building-assistant/go-utils/http"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
@@ -31,6 +36,21 @@ func doAnything() {
 	// Todo: implement everything the app should do
 	log.Debug("main", "do anything")
 
+}
+
+func initialization() {
+	ctx := context.Background()
+
+	// Necessary to close used init resources
+	conn := db.NewInitConnectionWithContextAndApplicationName(ctx, app.AppName())
+	defer conn.Close(ctx)
+
+	// Init the app before the first run.
+	app.Init(conn, app.AppName(),
+		app.ExecSqlFile("conf/init.sql"),
+		asset.InitAssetTypeFiles("resources/asset-types/*.json"),
+		dashboard.InitWidgetTypeFiles("resources/widget-types/*.json"),
+	)
 }
 
 // listenApi starts the API server and listen for requests
