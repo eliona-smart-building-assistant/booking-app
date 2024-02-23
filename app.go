@@ -22,21 +22,11 @@ import (
 	"net/http"
 
 	"github.com/eliona-smart-building-assistant/go-eliona/app"
-	"github.com/eliona-smart-building-assistant/go-eliona/asset"
-	"github.com/eliona-smart-building-assistant/go-eliona/dashboard"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	"github.com/eliona-smart-building-assistant/go-utils/db"
 	utilshttp "github.com/eliona-smart-building-assistant/go-utils/http"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
-
-// doAnything is the main app function which is called periodically
-func doAnything() {
-
-	// Todo: implement everything the app should do
-	log.Debug("main", "do anything")
-
-}
 
 func initialization() {
 	ctx := context.Background()
@@ -48,8 +38,6 @@ func initialization() {
 	// Init the app before the first run.
 	app.Init(conn, app.AppName(),
 		app.ExecSqlFile("conf/init.sql"),
-		asset.InitAssetTypeFiles("resources/asset-types/*.json"),
-		dashboard.InitWidgetTypeFiles("resources/widget-types/*.json"),
 	)
 }
 

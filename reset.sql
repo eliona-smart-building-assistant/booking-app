@@ -32,21 +32,5 @@ VALUES ('booking', 't')
 
 DROP SCHEMA IF EXISTS booking CASCADE;
 
-DELETE FROM heap
-WHERE asset_id IN (
-	SELECT asset_id
-	FROM asset
-	WHERE asset_type LIKE E'booking\\_%'
-);
-
-DELETE FROM attribute_schema
-WHERE asset_type LIKE E'booking\\_%';
-
-DELETE FROM asset
-WHERE asset_type LIKE E'booking\\_%';
-
-DELETE FROM asset_type
-WHERE asset_type LIKE E'booking\\_%';
-
 -- DELETE FROM eliona_app WHERE app_name = 'booking';
 -- DELETE FROM eliona_store WHERE app_name = 'booking';

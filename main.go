@@ -16,8 +16,6 @@
 package main
 
 import (
-	"time"
-
 	"github.com/eliona-smart-building-assistant/go-eliona/app"
 	"github.com/eliona-smart-building-assistant/go-utils/common"
 	"github.com/eliona-smart-building-assistant/go-utils/db"
@@ -45,7 +43,6 @@ func main() {
 
 	// Starting the service to collect the data for this app.
 	common.WaitForWithOs(
-		common.Loop(doAnything, time.Second),
 		listenApi,
 	)
 
