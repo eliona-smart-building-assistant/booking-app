@@ -50,10 +50,10 @@ func NewBookingAPIController(s BookingAPIServicer, opts ...BookingAPIOption) Rou
 // Routes returns all the api routes for the BookingAPIController
 func (c *BookingAPIController) Routes() Routes {
 	return Routes{
-		"BookingsBookingIdDeletePost": Route{
-			strings.ToUpper("Post"),
-			"/v1/bookings/{bookingId}/delete",
-			c.BookingsBookingIdDeletePost,
+		"BookingsBookingIdDelete": Route{
+			strings.ToUpper("Delete"),
+			"/v1/bookings/{bookingId}",
+			c.BookingsBookingIdDelete,
 		},
 		"BookingsBookingIdRegisterGuestPost": Route{
 			strings.ToUpper("Post"),
@@ -73,30 +73,15 @@ func (c *BookingAPIController) Routes() Routes {
 	}
 }
 
-// BookingsBookingIdDeletePost - Cancel a booking
-func (c *BookingAPIController) BookingsBookingIdDeletePost(w http.ResponseWriter, r *http.Request) {
+// BookingsBookingIdDelete - Cancel a booking
+func (c *BookingAPIController) BookingsBookingIdDelete(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	bookingIdParam := params["bookingId"]
 	if bookingIdParam == "" {
 		c.errorHandler(w, r, &RequiredError{"bookingId"}, nil)
 		return
 	}
-	deleteBookingRequestParam := DeleteBookingRequest{}
-	d := json.NewDecoder(r.Body)
-	d.DisallowUnknownFields()
-	if err := d.Decode(&deleteBookingRequestParam); err != nil {
-		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
-		return
-	}
-	if err := AssertDeleteBookingRequestRequired(deleteBookingRequestParam); err != nil {
-		c.errorHandler(w, r, err, nil)
-		return
-	}
-	if err := AssertDeleteBookingRequestConstraints(deleteBookingRequestParam); err != nil {
-		c.errorHandler(w, r, err, nil)
-		return
-	}
-	result, err := c.service.BookingsBookingIdDeletePost(r.Context(), bookingIdParam, deleteBookingRequestParam)
+	result, err := c.service.BookingsBookingIdDelete(r.Context(), bookingIdParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)
@@ -164,9 +149,16 @@ func (c *BookingAPIController) BookingsGet(w http.ResponseWriter, r *http.Reques
 		c.errorHandler(w, r, &RequiredError{Field: "end"}, nil)
 		return
 	}
-	var assetIdParam string
+	var assetIdParam int32
 	if query.Has("assetId") {
-		param := query.Get("assetId")
+		param, err := parseNumericParameter[int32](
+			query.Get("assetId"),
+			WithParse[int32](parseInt32),
+		)
+		if err != nil {
+			c.errorHandler(w, r, &ParsingError{Err: err}, nil)
+			return
+		}
 
 		assetIdParam = param
 	} else {

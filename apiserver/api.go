@@ -18,7 +18,7 @@ import (
 // The BookingAPIRouter implementation should parse necessary information from the http request,
 // pass the data to a BookingAPIServicer to perform the required actions, then write the service results to the http response.
 type BookingAPIRouter interface {
-	BookingsBookingIdDeletePost(http.ResponseWriter, *http.Request)
+	BookingsBookingIdDelete(http.ResponseWriter, *http.Request)
 	BookingsBookingIdRegisterGuestPost(http.ResponseWriter, *http.Request)
 	BookingsGet(http.ResponseWriter, *http.Request)
 	BookingsPost(http.ResponseWriter, *http.Request)
@@ -37,9 +37,9 @@ type VersionAPIRouter interface {
 // while the service implementation can be ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
 type BookingAPIServicer interface {
-	BookingsBookingIdDeletePost(context.Context, string, DeleteBookingRequest) (ImplResponse, error)
+	BookingsBookingIdDelete(context.Context, string) (ImplResponse, error)
 	BookingsBookingIdRegisterGuestPost(context.Context, string, BookingsBookingIdRegisterGuestPostRequest) (ImplResponse, error)
-	BookingsGet(context.Context, string, string, string) (ImplResponse, error)
+	BookingsGet(context.Context, string, string, int32) (ImplResponse, error)
 	BookingsPost(context.Context, CreateBookingRequest) (ImplResponse, error)
 }
 

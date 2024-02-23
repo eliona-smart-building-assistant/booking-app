@@ -11,8 +11,8 @@ package apiserver
 
 type CreateBookingRequest struct {
 
-	// Device code obtained from authorization
-	DeviceCode string `json:"deviceCode"`
+	// The ID (email) of the organizer.
+	OrganizerID string `json:"organizerID"`
 
 	// The start datetime of the booking in ISO 8601 format.
 	Start string `json:"start"`
@@ -30,9 +30,9 @@ type CreateBookingRequest struct {
 // AssertCreateBookingRequestRequired checks if the required fields are not zero-ed
 func AssertCreateBookingRequestRequired(obj CreateBookingRequest) error {
 	elements := map[string]interface{}{
-		"deviceCode": obj.DeviceCode,
-		"start":      obj.Start,
-		"end":        obj.End,
+		"organizerID": obj.OrganizerID,
+		"start":       obj.Start,
+		"end":         obj.End,
 	}
 	for name, el := range elements {
 		if isZero := IsZeroValue(el); isZero {

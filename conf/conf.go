@@ -15,6 +15,72 @@
 
 package conf
 
-//
-// Todo: Define anything for configuration like structures and methods to read and process configuration
-//
+import (
+	"booking-app/appdb"
+	"context"
+	"database/sql"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/volatiletech/null/v8"
+	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries/qm"
+)
+
+var ErrBadRequest = errors.New("bad request")
+var ErrNotFound = errors.New("not found")
+
+func InsertEvent(ctx context.Context, title string, description string, organizer string, startTime, endTime time.Time) error {
+	var dbEvent appdb.Event
+	dbEvent.Title = title
+	dbEvent.Description = description
+	dbEvent.Organizer = organizer
+	dbEvent.StartTime = startTime
+	dbEvent.EndTime = endTime
+	return dbEvent.InsertG(ctx, boil.Infer())
+}
+
+func GetEventByID(ctx context.Context, eventID string) (*appdb.Event, error) {
+	event, err := appdb.Events(
+		appdb.EventWhere.ID.EQ(eventID),
+	).OneG(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("fetching event: %v", err)
+	}
+	return event, nil
+}
+
+func GetEventsForAsset(ctx context.Context, assetID int32, since, until time.Time) ([]*appdb.Event, error) {
+	events, err := appdb.Events(
+		qm.InnerJoin("booking.event_resource r on r.event_id = booking.event.id"),
+		appdb.EventWhere.CancelledAt.IsNull(),
+		appdb.EventWhere.EndTime.GT(since),
+		appdb.EventWhere.StartTime.LT(until),
+		appdb.EventResourceWhere.AssetID.EQ(assetID),
+	).AllG(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("fetching events for asset: %v", err)
+	}
+	return events, nil
+}
+
+func CancelEvent(ctx context.Context, eventID string) error {
+	event, err := appdb.Events(
+		appdb.EventWhere.ID.EQ(eventID),
+	).OneG(ctx)
+	if errors.Is(err, sql.ErrNoRows) {
+		return ErrNotFound
+	}
+	if err != nil {
+		return fmt.Errorf("fetching event to cancel: %v", err)
+	}
+
+	event.CancelledAt = null.TimeFrom(time.Now())
+
+	if _, err := event.UpdateG(ctx, boil.Whitelist(appdb.EventColumns.CancelledAt)); err != nil {
+		return fmt.Errorf("updating event to mark as cancelled: %v", err)
+	}
+
+	return nil
+}

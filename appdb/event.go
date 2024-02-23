@@ -24,7 +24,7 @@ import (
 
 // Event is an object representing the database table.
 type Event struct {
-	ID          int64     `boil:"id" json:"id" toml:"id" yaml:"id"`
+	ID          string    `boil:"id" json:"id" toml:"id" yaml:"id"`
 	Title       string    `boil:"title" json:"title" toml:"title" yaml:"title"`
 	Description string    `boil:"description" json:"description" toml:"description" yaml:"description"`
 	Organizer   string    `boil:"organizer" json:"organizer" toml:"organizer" yaml:"organizer"`
@@ -78,29 +78,6 @@ var EventTableColumns = struct {
 }
 
 // Generated where
-
-type whereHelperint64 struct{ field string }
-
-func (w whereHelperint64) EQ(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
-func (w whereHelperint64) NEQ(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
-func (w whereHelperint64) LT(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
-func (w whereHelperint64) LTE(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
-func (w whereHelperint64) GT(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
-func (w whereHelperint64) GTE(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
-func (w whereHelperint64) IN(slice []int64) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
-}
-func (w whereHelperint64) NIN(slice []int64) qm.QueryMod {
-	values := make([]interface{}, 0, len(slice))
-	for _, value := range slice {
-		values = append(values, value)
-	}
-	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
-}
 
 type whereHelperstring struct{ field string }
 
@@ -175,7 +152,7 @@ func (w whereHelpernull_Time) IsNull() qm.QueryMod    { return qmhelper.WhereIsN
 func (w whereHelpernull_Time) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
 
 var EventWhere = struct {
-	ID          whereHelperint64
+	ID          whereHelperstring
 	Title       whereHelperstring
 	Description whereHelperstring
 	Organizer   whereHelperstring
@@ -184,7 +161,7 @@ var EventWhere = struct {
 	CreatedAt   whereHelpertime_Time
 	CancelledAt whereHelpernull_Time
 }{
-	ID:          whereHelperint64{field: "\"booking\".\"event\".\"id\""},
+	ID:          whereHelperstring{field: "\"booking\".\"event\".\"id\""},
 	Title:       whereHelperstring{field: "\"booking\".\"event\".\"title\""},
 	Description: whereHelperstring{field: "\"booking\".\"event\".\"description\""},
 	Organizer:   whereHelperstring{field: "\"booking\".\"event\".\"organizer\""},
@@ -223,8 +200,8 @@ type eventL struct{}
 
 var (
 	eventAllColumns            = []string{"id", "title", "description", "organizer", "start_time", "end_time", "created_at", "cancelled_at"}
-	eventColumnsWithoutDefault = []string{"title", "description", "organizer", "start_time", "end_time"}
-	eventColumnsWithDefault    = []string{"id", "created_at", "cancelled_at"}
+	eventColumnsWithoutDefault = []string{"id", "title", "description", "organizer", "start_time", "end_time"}
+	eventColumnsWithDefault    = []string{"created_at", "cancelled_at"}
 	eventPrimaryKeyColumns     = []string{"id"}
 	eventGeneratedColumns      = []string{}
 )
@@ -755,13 +732,13 @@ func Events(mods ...qm.QueryMod) eventQuery {
 }
 
 // FindEventG retrieves a single record by ID.
-func FindEventG(ctx context.Context, iD int64, selectCols ...string) (*Event, error) {
+func FindEventG(ctx context.Context, iD string, selectCols ...string) (*Event, error) {
 	return FindEvent(ctx, boil.GetContextDB(), iD, selectCols...)
 }
 
 // FindEvent retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindEvent(ctx context.Context, exec boil.ContextExecutor, iD int64, selectCols ...string) (*Event, error) {
+func FindEvent(ctx context.Context, exec boil.ContextExecutor, iD string, selectCols ...string) (*Event, error) {
 	eventObj := &Event{}
 
 	sel := "*"
@@ -1340,12 +1317,12 @@ func (o *EventSlice) ReloadAll(ctx context.Context, exec boil.ContextExecutor) e
 }
 
 // EventExistsG checks if the Event row exists.
-func EventExistsG(ctx context.Context, iD int64) (bool, error) {
+func EventExistsG(ctx context.Context, iD string) (bool, error) {
 	return EventExists(ctx, boil.GetContextDB(), iD)
 }
 
 // EventExists checks if the Event row exists.
-func EventExists(ctx context.Context, exec boil.ContextExecutor, iD int64) (bool, error) {
+func EventExists(ctx context.Context, exec boil.ContextExecutor, iD string) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"booking\".\"event\" where \"id\"=$1 limit 1)"
 

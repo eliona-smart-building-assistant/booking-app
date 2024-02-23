@@ -17,9 +17,12 @@ package apiservices
 
 import (
 	"booking-app/apiserver"
+	"booking-app/conf"
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
+	"time"
 )
 
 // BookingAPIService is a service that implements the logic for the BookingAPIServicer
@@ -33,9 +36,14 @@ func NewBookingAPIService() apiserver.BookingAPIServicer {
 	return &BookingAPIService{}
 }
 
-// BookingsBookingIdDeletePost - Cancel a booking
-func (s *BookingAPIService) BookingsBookingIdDeletePost(ctx context.Context, bookingId string, deleteBookingRequest apiserver.DeleteBookingRequest) (apiserver.ImplResponse, error) {
-	return apiserver.Response(http.StatusNotImplemented, nil), errors.New("BookingsBookingIdDeletePost method not implemented")
+// BookingsBookingIdDelete - Cancel a booking
+func (s *BookingAPIService) BookingsBookingIdDelete(ctx context.Context, bookingId string) (apiserver.ImplResponse, error) {
+	if err := conf.CancelEvent(ctx, bookingId); errors.Is(err, conf.ErrNotFound) {
+		return apiserver.ImplResponse{Code: http.StatusNotFound}, err
+	} else if err != nil {
+		return apiserver.ImplResponse{Code: http.StatusInternalServerError}, err
+	}
+	return apiserver.Response(http.StatusOK, nil), nil
 }
 
 // BookingsBookingIdRegisterGuestPost - Notify event organizer that a guest came for the event.
@@ -46,11 +54,39 @@ func (s *BookingAPIService) BookingsBookingIdRegisterGuestPost(ctx context.Conte
 }
 
 // BookingsGet - List bookings
-func (s *BookingAPIService) BookingsGet(ctx context.Context, start string, end string, assetId string) (apiserver.ImplResponse, error) {
-	return apiserver.Response(http.StatusNotImplemented, nil), errors.New("BookingsGet method not implemented")
+func (s *BookingAPIService) BookingsGet(ctx context.Context, start string, end string, assetId int32) (apiserver.ImplResponse, error) {
+	since, err := time.Parse(time.RFC3339, start)
+	if err != nil {
+		return apiserver.Response(http.StatusBadRequest, "Invalid start time format"), fmt.Errorf("error parsing start time: %v", err)
+	}
+	until, err := time.Parse(time.RFC3339, end)
+	if err != nil {
+		return apiserver.Response(http.StatusBadRequest, "Invalid end time format"), fmt.Errorf("error parsing end time: %v", err)
+	}
+	events, err := conf.GetEventsForAsset(ctx, assetId, since, until)
+	if err != nil {
+		return apiserver.ImplResponse{Code: http.StatusInternalServerError}, err
+	}
+	return apiserver.Response(http.StatusOK, events), nil
 }
 
-// BookingsPost - Create a booking
-func (s *BookingAPIService) BookingsPost(ctx context.Context, createBookingRequest apiserver.CreateBookingRequest) (apiserver.ImplResponse, error) {
-	return apiserver.Response(http.StatusNotImplemented, nil), errors.New("BookingsPost method not implemented")
+// BookingsPost - Creates a new booking
+func (s *BookingAPIService) BookingsPost(ctx context.Context, req apiserver.CreateBookingRequest) (apiserver.ImplResponse, error) {
+	startTime, err := time.Parse(time.RFC3339, req.Start)
+	if err != nil {
+		return apiserver.Response(http.StatusBadRequest, "Invalid start time format"), fmt.Errorf("error parsing start time: %v", err)
+	}
+	endTime, err := time.Parse(time.RFC3339, req.End)
+	if err != nil {
+		return apiserver.Response(http.StatusBadRequest, "Invalid end time format"), fmt.Errorf("error parsing end time: %v", err)
+	}
+	if !endTime.After(startTime) {
+		return apiserver.Response(http.StatusBadRequest, "End time must be after start time"), errors.New("end time is not after start time")
+	}
+
+	if err = conf.InsertEvent(ctx, req.EventName, req.Description, "OrganizerName", startTime, endTime); err != nil {
+		return apiserver.Response(http.StatusInternalServerError, "Failed to insert event"), fmt.Errorf("error inserting event: %v", err)
+	}
+
+	return apiserver.Response(http.StatusCreated, "Booking created successfully"), nil
 }

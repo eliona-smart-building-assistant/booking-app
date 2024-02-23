@@ -99,7 +99,7 @@ paths:
           description: The ID of the asset for which bookings are being queried.
           required: true
           schema:
-            type: string
+            type: integer
       responses:
         "200":
           description: A list of bookings.
@@ -129,8 +129,8 @@ paths:
         "400":
           description: Bad request (e.g., validation errors).
 
-  /bookings/{bookingId}/delete:
-    post:
+  /bookings/{bookingId}:
+    delete:
       tags:
         - Booking
       summary: Cancel a booking
@@ -141,12 +141,6 @@ paths:
           required: true
           schema:
             type: string
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DeleteBookingRequest"
       responses:
         "204":
           description: Booking cancelled successfully.
@@ -235,10 +229,9 @@ components:
     CreateBookingRequest:
       type: object
       properties:
-        deviceCode:
+        organizerID:
           type: string
-          description: Device code obtained from authorization
-          example: "3L10NA9Q7"
+          description: The ID (email) of the organizer.
         start:
           type: string
           description: The start datetime of the booking in ISO 8601 format.
@@ -254,16 +247,6 @@ components:
           type: string
           description: A description of the event or booking. (Optional)
       required:
-        - deviceCode
+        - organizerID
         - start
         - end
-    DeleteBookingRequest:
-      type: object
-      properties:
-        deviceCode:
-          type: string
-          description: Device code obtained from authorization
-          example: "3L10NA9Q7"
-      required:
-        - deviceCode
-        - bookingId

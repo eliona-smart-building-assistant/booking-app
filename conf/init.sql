@@ -16,7 +16,7 @@
 create schema if not exists booking;
 
 create table booking.event (
-    id bigserial primary key,
+    id text primary key,
     title varchar(255) not null,
     description text not null,
     organizer text not null,
@@ -27,7 +27,7 @@ create table booking.event (
 );
 
 create table booking.event_resource (
-    event_id int not null references booking.event(id),
+    event_id text not null references booking.event(id),
     asset_id int not null,
     primary key (event_id, asset_id)
 );
