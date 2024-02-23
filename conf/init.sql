@@ -15,18 +15,8 @@
 
 create schema if not exists booking;
 
-create table booking.configuration
-(
-    id bigserial primary key,
-    active boolean default false,
-    enable boolean default false,
-    project_ids text[],
-    user_id text
-);
-
 create table booking.event (
     id bigserial primary key,
-    config_id bigserial not null references booking.configuration(id),
     title varchar(255) not null,
     description text not null,
     organizer text not null,

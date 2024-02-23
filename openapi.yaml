@@ -42,93 +42,6 @@ tags:
       url: https://github.com/eliona-smart-building-assistant/booking-app
 
 paths:
-  /configs:
-    get:
-      tags:
-        - Configuration
-      summary: Get configurations
-      description: Gets information about all configurations.
-      operationId: getConfigurations
-      responses:
-        "200":
-          description: Successfully returned all configurations
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Configuration"
-    post:
-      tags:
-        - Configuration
-      summary: Creates a configuration
-      description: Creates a configuration.
-      operationId: postConfiguration
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Configuration"
-      responses:
-        "201":
-          description: Successfully created a configuration
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Configuration"
-
-  /configs/{config-id}:
-    get:
-      tags:
-        - Configuration
-      summary: Get configuration
-      description: Gets information about the configuration with the given id
-      parameters:
-        - $ref: "#/components/parameters/config-id"
-      operationId: getConfigurationById
-      responses:
-        "200":
-          description: Successfully returned configuration
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Configuration"
-        "400":
-          description: Bad request
-    put:
-      tags:
-        - Configuration
-      summary: Updates a configuration
-      description: Updates a configuration
-      parameters:
-        - $ref: "#/components/parameters/config-id"
-      operationId: putConfigurationById
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/Configuration"
-      responses:
-        "200":
-          description: Successfully updated a configuration
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Configuration"
-    delete:
-      tags:
-        - Configuration
-      summary: Deletes a configuration
-      description: Removes information about the configuration with the given id
-      parameters:
-        - $ref: "#/components/parameters/config-id"
-      operationId: deleteConfigurationById
-      responses:
-        "204":
-          description: Successfully deleted configured configuration
-        "400":
-          description: Bad request
-
   /version:
     get:
       summary: Version of the API
@@ -297,36 +210,6 @@ components:
         format: int64
         example: 4711
   schemas:
-    Configuration:
-      type: object
-      description: Configuration.
-      properties:
-        id:
-          type: integer
-          format: int64
-          description: Internal identifier for the configured API (created automatically).
-          readOnly: true
-          nullable: true
-        enable:
-          type: boolean
-          description: Flag to enable or disable fetching from this API
-          default: true
-          nullable: true
-        active:
-          type: boolean
-          readOnly: true
-          description: Set to `true` by the app when running and to `false` when app is stopped
-          nullable: true
-        projectIDs:
-          type: array
-          description: List of Eliona project ids for which this device should collect data.
-          nullable: true
-          items:
-            type: string
-          example:
-            - "42"
-            - "99"
-
     Booking:
       type: object
       properties:

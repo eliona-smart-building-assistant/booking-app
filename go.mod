@@ -21,7 +21,6 @@ replace github.com/ericlagergren/decimal => github.com/ericlagergren/decimal v0.
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/eliona-smart-building-assistant/go-eliona-api-client/v2 v2.6.1 // indirect
-	github.com/ericlagergren/decimal v0.0.0-20190420051523-6335edbaa640 // indirect
 	github.com/gofrs/uuid v4.2.0+incompatible // indirect
 	github.com/gorilla/websocket v1.5.1 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect

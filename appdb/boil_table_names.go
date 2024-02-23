@@ -4,11 +4,9 @@
 package appdb
 
 var TableNames = struct {
-	Configuration string
 	Event         string
 	EventResource string
 }{
-	Configuration: "configuration",
 	Event:         "event",
 	EventResource: "event_resource",
 }

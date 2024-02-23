@@ -25,7 +25,6 @@ import (
 // Event is an object representing the database table.
 type Event struct {
 	ID          int64     `boil:"id" json:"id" toml:"id" yaml:"id"`
-	ConfigID    int64     `boil:"config_id" json:"config_id" toml:"config_id" yaml:"config_id"`
 	Title       string    `boil:"title" json:"title" toml:"title" yaml:"title"`
 	Description string    `boil:"description" json:"description" toml:"description" yaml:"description"`
 	Organizer   string    `boil:"organizer" json:"organizer" toml:"organizer" yaml:"organizer"`
@@ -40,7 +39,6 @@ type Event struct {
 
 var EventColumns = struct {
 	ID          string
-	ConfigID    string
 	Title       string
 	Description string
 	Organizer   string
@@ -50,7 +48,6 @@ var EventColumns = struct {
 	CancelledAt string
 }{
 	ID:          "id",
-	ConfigID:    "config_id",
 	Title:       "title",
 	Description: "description",
 	Organizer:   "organizer",
@@ -62,7 +59,6 @@ var EventColumns = struct {
 
 var EventTableColumns = struct {
 	ID          string
-	ConfigID    string
 	Title       string
 	Description string
 	Organizer   string
@@ -72,7 +68,6 @@ var EventTableColumns = struct {
 	CancelledAt string
 }{
 	ID:          "event.id",
-	ConfigID:    "event.config_id",
 	Title:       "event.title",
 	Description: "event.description",
 	Organizer:   "event.organizer",
@@ -83,6 +78,29 @@ var EventTableColumns = struct {
 }
 
 // Generated where
+
+type whereHelperint64 struct{ field string }
+
+func (w whereHelperint64) EQ(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.EQ, x) }
+func (w whereHelperint64) NEQ(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.NEQ, x) }
+func (w whereHelperint64) LT(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.LT, x) }
+func (w whereHelperint64) LTE(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.LTE, x) }
+func (w whereHelperint64) GT(x int64) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
+func (w whereHelperint64) GTE(x int64) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
+func (w whereHelperint64) IN(slice []int64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereIn(fmt.Sprintf("%s IN ?", w.field), values...)
+}
+func (w whereHelperint64) NIN(slice []int64) qm.QueryMod {
+	values := make([]interface{}, 0, len(slice))
+	for _, value := range slice {
+		values = append(values, value)
+	}
+	return qm.WhereNotIn(fmt.Sprintf("%s NOT IN ?", w.field), values...)
+}
 
 type whereHelperstring struct{ field string }
 
@@ -158,7 +176,6 @@ func (w whereHelpernull_Time) IsNotNull() qm.QueryMod { return qmhelper.WhereIsN
 
 var EventWhere = struct {
 	ID          whereHelperint64
-	ConfigID    whereHelperint64
 	Title       whereHelperstring
 	Description whereHelperstring
 	Organizer   whereHelperstring
@@ -168,7 +185,6 @@ var EventWhere = struct {
 	CancelledAt whereHelpernull_Time
 }{
 	ID:          whereHelperint64{field: "\"booking\".\"event\".\"id\""},
-	ConfigID:    whereHelperint64{field: "\"booking\".\"event\".\"config_id\""},
 	Title:       whereHelperstring{field: "\"booking\".\"event\".\"title\""},
 	Description: whereHelperstring{field: "\"booking\".\"event\".\"description\""},
 	Organizer:   whereHelperstring{field: "\"booking\".\"event\".\"organizer\""},
@@ -180,29 +196,19 @@ var EventWhere = struct {
 
 // EventRels is where relationship names are stored.
 var EventRels = struct {
-	Config         string
 	EventResources string
 }{
-	Config:         "Config",
 	EventResources: "EventResources",
 }
 
 // eventR is where relationships are stored.
 type eventR struct {
-	Config         *Configuration     `boil:"Config" json:"Config" toml:"Config" yaml:"Config"`
 	EventResources EventResourceSlice `boil:"EventResources" json:"EventResources" toml:"EventResources" yaml:"EventResources"`
 }
 
 // NewStruct creates a new relationship struct
 func (*eventR) NewStruct() *eventR {
 	return &eventR{}
-}
-
-func (r *eventR) GetConfig() *Configuration {
-	if r == nil {
-		return nil
-	}
-	return r.Config
 }
 
 func (r *eventR) GetEventResources() EventResourceSlice {
@@ -216,9 +222,9 @@ func (r *eventR) GetEventResources() EventResourceSlice {
 type eventL struct{}
 
 var (
-	eventAllColumns            = []string{"id", "config_id", "title", "description", "organizer", "start_time", "end_time", "created_at", "cancelled_at"}
+	eventAllColumns            = []string{"id", "title", "description", "organizer", "start_time", "end_time", "created_at", "cancelled_at"}
 	eventColumnsWithoutDefault = []string{"title", "description", "organizer", "start_time", "end_time"}
-	eventColumnsWithDefault    = []string{"id", "config_id", "created_at", "cancelled_at"}
+	eventColumnsWithDefault    = []string{"id", "created_at", "cancelled_at"}
 	eventPrimaryKeyColumns     = []string{"id"}
 	eventGeneratedColumns      = []string{}
 )
@@ -548,17 +554,6 @@ func (q eventQuery) Exists(ctx context.Context, exec boil.ContextExecutor) (bool
 	return count > 0, nil
 }
 
-// Config pointed to by the foreign key.
-func (o *Event) Config(mods ...qm.QueryMod) configurationQuery {
-	queryMods := []qm.QueryMod{
-		qm.Where("\"id\" = ?", o.ConfigID),
-	}
-
-	queryMods = append(queryMods, mods...)
-
-	return Configurations(queryMods...)
-}
-
 // EventResources retrieves all the event_resource's EventResources with an executor.
 func (o *Event) EventResources(mods ...qm.QueryMod) eventResourceQuery {
 	var queryMods []qm.QueryMod
@@ -571,126 +566,6 @@ func (o *Event) EventResources(mods ...qm.QueryMod) eventResourceQuery {
 	)
 
 	return EventResources(queryMods...)
-}
-
-// LoadConfig allows an eager lookup of values, cached into the
-// loaded structs of the objects. This is for an N-1 relationship.
-func (eventL) LoadConfig(ctx context.Context, e boil.ContextExecutor, singular bool, maybeEvent interface{}, mods queries.Applicator) error {
-	var slice []*Event
-	var object *Event
-
-	if singular {
-		var ok bool
-		object, ok = maybeEvent.(*Event)
-		if !ok {
-			object = new(Event)
-			ok = queries.SetFromEmbeddedStruct(&object, &maybeEvent)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", object, maybeEvent))
-			}
-		}
-	} else {
-		s, ok := maybeEvent.(*[]*Event)
-		if ok {
-			slice = *s
-		} else {
-			ok = queries.SetFromEmbeddedStruct(&slice, maybeEvent)
-			if !ok {
-				return errors.New(fmt.Sprintf("failed to set %T from embedded struct %T", slice, maybeEvent))
-			}
-		}
-	}
-
-	args := make(map[interface{}]struct{})
-	if singular {
-		if object.R == nil {
-			object.R = &eventR{}
-		}
-		args[object.ConfigID] = struct{}{}
-
-	} else {
-		for _, obj := range slice {
-			if obj.R == nil {
-				obj.R = &eventR{}
-			}
-
-			args[obj.ConfigID] = struct{}{}
-
-		}
-	}
-
-	if len(args) == 0 {
-		return nil
-	}
-
-	argsSlice := make([]interface{}, len(args))
-	i := 0
-	for arg := range args {
-		argsSlice[i] = arg
-		i++
-	}
-
-	query := NewQuery(
-		qm.From(`booking.configuration`),
-		qm.WhereIn(`booking.configuration.id in ?`, argsSlice...),
-	)
-	if mods != nil {
-		mods.Apply(query)
-	}
-
-	results, err := query.QueryContext(ctx, e)
-	if err != nil {
-		return errors.Wrap(err, "failed to eager load Configuration")
-	}
-
-	var resultSlice []*Configuration
-	if err = queries.Bind(results, &resultSlice); err != nil {
-		return errors.Wrap(err, "failed to bind eager loaded slice Configuration")
-	}
-
-	if err = results.Close(); err != nil {
-		return errors.Wrap(err, "failed to close results of eager load for configuration")
-	}
-	if err = results.Err(); err != nil {
-		return errors.Wrap(err, "error occurred during iteration of eager loaded relations for configuration")
-	}
-
-	if len(configurationAfterSelectHooks) != 0 {
-		for _, obj := range resultSlice {
-			if err := obj.doAfterSelectHooks(ctx, e); err != nil {
-				return err
-			}
-		}
-	}
-
-	if len(resultSlice) == 0 {
-		return nil
-	}
-
-	if singular {
-		foreign := resultSlice[0]
-		object.R.Config = foreign
-		if foreign.R == nil {
-			foreign.R = &configurationR{}
-		}
-		foreign.R.ConfigEvents = append(foreign.R.ConfigEvents, object)
-		return nil
-	}
-
-	for _, local := range slice {
-		for _, foreign := range resultSlice {
-			if local.ConfigID == foreign.ID {
-				local.R.Config = foreign
-				if foreign.R == nil {
-					foreign.R = &configurationR{}
-				}
-				foreign.R.ConfigEvents = append(foreign.R.ConfigEvents, local)
-				break
-			}
-		}
-	}
-
-	return nil
 }
 
 // LoadEventResources allows an eager lookup of values, cached into the
@@ -801,61 +676,6 @@ func (eventL) LoadEventResources(ctx context.Context, e boil.ContextExecutor, si
 				break
 			}
 		}
-	}
-
-	return nil
-}
-
-// SetConfigG of the event to the related item.
-// Sets o.R.Config to related.
-// Adds o to related.R.ConfigEvents.
-// Uses the global database handle.
-func (o *Event) SetConfigG(ctx context.Context, insert bool, related *Configuration) error {
-	return o.SetConfig(ctx, boil.GetContextDB(), insert, related)
-}
-
-// SetConfig of the event to the related item.
-// Sets o.R.Config to related.
-// Adds o to related.R.ConfigEvents.
-func (o *Event) SetConfig(ctx context.Context, exec boil.ContextExecutor, insert bool, related *Configuration) error {
-	var err error
-	if insert {
-		if err = related.Insert(ctx, exec, boil.Infer()); err != nil {
-			return errors.Wrap(err, "failed to insert into foreign table")
-		}
-	}
-
-	updateQuery := fmt.Sprintf(
-		"UPDATE \"booking\".\"event\" SET %s WHERE %s",
-		strmangle.SetParamNames("\"", "\"", 1, []string{"config_id"}),
-		strmangle.WhereClause("\"", "\"", 2, eventPrimaryKeyColumns),
-	)
-	values := []interface{}{related.ID, o.ID}
-
-	if boil.IsDebug(ctx) {
-		writer := boil.DebugWriterFrom(ctx)
-		fmt.Fprintln(writer, updateQuery)
-		fmt.Fprintln(writer, values)
-	}
-	if _, err = exec.ExecContext(ctx, updateQuery, values...); err != nil {
-		return errors.Wrap(err, "failed to update local table")
-	}
-
-	o.ConfigID = related.ID
-	if o.R == nil {
-		o.R = &eventR{
-			Config: related,
-		}
-	} else {
-		o.R.Config = related
-	}
-
-	if related.R == nil {
-		related.R = &configurationR{
-			ConfigEvents: EventSlice{o},
-		}
-	} else {
-		related.R.ConfigEvents = append(related.R.ConfigEvents, o)
 	}
 
 	return nil
