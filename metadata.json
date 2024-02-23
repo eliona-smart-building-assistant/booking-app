@@ -1,6 +1,6 @@
 {
   "name": "booking",
-  "elionaMinVersion": "v11.0.0",
+  "elionaMinVersion": "v12.0.0",
   "displayName": {
     "en": "Booking App",
     "de": "Buchungs-App"
