@@ -23,8 +23,8 @@ import (
 
 // EventResource is an object representing the database table.
 type EventResource struct {
-	EventID string `boil:"event_id" json:"event_id" toml:"event_id" yaml:"event_id"`
-	AssetID int32  `boil:"asset_id" json:"asset_id" toml:"asset_id" yaml:"asset_id"`
+	EventID int64 `boil:"event_id" json:"event_id" toml:"event_id" yaml:"event_id"`
+	AssetID int32 `boil:"asset_id" json:"asset_id" toml:"asset_id" yaml:"asset_id"`
 
 	R *eventResourceR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L eventResourceL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -72,10 +72,10 @@ func (w whereHelperint32) NIN(slice []int32) qm.QueryMod {
 }
 
 var EventResourceWhere = struct {
-	EventID whereHelperstring
+	EventID whereHelperint64
 	AssetID whereHelperint32
 }{
-	EventID: whereHelperstring{field: "\"booking\".\"event_resource\".\"event_id\""},
+	EventID: whereHelperint64{field: "\"booking\".\"event_resource\".\"event_id\""},
 	AssetID: whereHelperint32{field: "\"booking\".\"event_resource\".\"asset_id\""},
 }
 
@@ -108,8 +108,8 @@ type eventResourceL struct{}
 
 var (
 	eventResourceAllColumns            = []string{"event_id", "asset_id"}
-	eventResourceColumnsWithoutDefault = []string{"event_id", "asset_id"}
-	eventResourceColumnsWithDefault    = []string{}
+	eventResourceColumnsWithoutDefault = []string{"asset_id"}
+	eventResourceColumnsWithDefault    = []string{"event_id"}
 	eventResourcePrimaryKeyColumns     = []string{"event_id", "asset_id"}
 	eventResourceGeneratedColumns      = []string{}
 )
@@ -637,13 +637,13 @@ func EventResources(mods ...qm.QueryMod) eventResourceQuery {
 }
 
 // FindEventResourceG retrieves a single record by ID.
-func FindEventResourceG(ctx context.Context, eventID string, assetID int32, selectCols ...string) (*EventResource, error) {
+func FindEventResourceG(ctx context.Context, eventID int64, assetID int32, selectCols ...string) (*EventResource, error) {
 	return FindEventResource(ctx, boil.GetContextDB(), eventID, assetID, selectCols...)
 }
 
 // FindEventResource retrieves a single record by ID with an executor.
 // If selectCols is empty Find will return all columns.
-func FindEventResource(ctx context.Context, exec boil.ContextExecutor, eventID string, assetID int32, selectCols ...string) (*EventResource, error) {
+func FindEventResource(ctx context.Context, exec boil.ContextExecutor, eventID int64, assetID int32, selectCols ...string) (*EventResource, error) {
 	eventResourceObj := &EventResource{}
 
 	sel := "*"
@@ -1208,12 +1208,12 @@ func (o *EventResourceSlice) ReloadAll(ctx context.Context, exec boil.ContextExe
 }
 
 // EventResourceExistsG checks if the EventResource row exists.
-func EventResourceExistsG(ctx context.Context, eventID string, assetID int32) (bool, error) {
+func EventResourceExistsG(ctx context.Context, eventID int64, assetID int32) (bool, error) {
 	return EventResourceExists(ctx, boil.GetContextDB(), eventID, assetID)
 }
 
 // EventResourceExists checks if the EventResource row exists.
-func EventResourceExists(ctx context.Context, exec boil.ContextExecutor, eventID string, assetID int32) (bool, error) {
+func EventResourceExists(ctx context.Context, exec boil.ContextExecutor, eventID int64, assetID int32) (bool, error) {
 	var exists bool
 	sql := "select exists(select 1 from \"booking\".\"event_resource\" where \"event_id\"=$1 AND \"asset_id\"=$2 limit 1)"
 

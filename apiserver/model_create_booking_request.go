@@ -11,6 +11,9 @@ package apiserver
 
 type CreateBookingRequest struct {
 
+	// The IDs of the assets to be booked.
+	AssetIds []int32 `json:"assetIds"`
+
 	// The ID (email) of the organizer.
 	OrganizerID string `json:"organizerID"`
 
@@ -30,6 +33,7 @@ type CreateBookingRequest struct {
 // AssertCreateBookingRequestRequired checks if the required fields are not zero-ed
 func AssertCreateBookingRequestRequired(obj CreateBookingRequest) error {
 	elements := map[string]interface{}{
+		"assetIds":    obj.AssetIds,
 		"organizerID": obj.OrganizerID,
 		"start":       obj.Start,
 		"end":         obj.End,

@@ -31,17 +31,42 @@ import (
 var ErrBadRequest = errors.New("bad request")
 var ErrNotFound = errors.New("not found")
 
-func InsertEvent(ctx context.Context, title string, description string, organizer string, startTime, endTime time.Time) error {
-	var dbEvent appdb.Event
-	dbEvent.Title = title
-	dbEvent.Description = description
-	dbEvent.Organizer = organizer
-	dbEvent.StartTime = startTime
-	dbEvent.EndTime = endTime
-	return dbEvent.InsertG(ctx, boil.Infer())
+func InsertEvent(ctx context.Context, assetIDs []int32, title, description, organizer string, startTime, endTime time.Time) error {
+	dbEvent := &appdb.Event{
+		Title:       title,
+		Description: description,
+		Organizer:   organizer,
+		StartTime:   startTime,
+		EndTime:     endTime,
+		CreatedAt:   time.Now(),
+	}
+
+	// Using a transaction to ensure atomicity of the insert operations
+	tx, err := boil.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	if err := dbEvent.Insert(ctx, tx, boil.Infer()); err != nil {
+		return err
+	}
+
+	for _, assetID := range assetIDs {
+		dbEventResource := &appdb.EventResource{
+			EventID: dbEvent.ID,
+			AssetID: assetID,
+		}
+
+		if err := dbEventResource.Insert(ctx, tx, boil.Infer()); err != nil {
+			return err
+		}
+	}
+
+	return tx.Commit()
 }
 
-func GetEventByID(ctx context.Context, eventID string) (*appdb.Event, error) {
+func GetEventByID(ctx context.Context, eventID int64) (*appdb.Event, error) {
 	event, err := appdb.Events(
 		appdb.EventWhere.ID.EQ(eventID),
 	).OneG(ctx)
@@ -54,10 +79,10 @@ func GetEventByID(ctx context.Context, eventID string) (*appdb.Event, error) {
 func GetEventsForAsset(ctx context.Context, assetID int32, since, until time.Time) ([]*appdb.Event, error) {
 	events, err := appdb.Events(
 		qm.InnerJoin("booking.event_resource r on r.event_id = booking.event.id"),
-		appdb.EventWhere.CancelledAt.IsNull(),
-		appdb.EventWhere.EndTime.GT(since),
-		appdb.EventWhere.StartTime.LT(until),
-		appdb.EventResourceWhere.AssetID.EQ(assetID),
+		qm.Where("booking.event.cancelled_at IS NULL"),
+		qm.And("r.asset_id = ?", assetID),
+		qm.And("booking.event.start_time <= ?", until),
+		qm.And("booking.event.end_time >= ?", since),
 	).AllG(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("fetching events for asset: %v", err)
@@ -65,7 +90,23 @@ func GetEventsForAsset(ctx context.Context, assetID int32, since, until time.Tim
 	return events, nil
 }
 
-func CancelEvent(ctx context.Context, eventID string) error {
+// This would be better, to have a static type checking. But there is a runtime error:
+// "failed to assign all query results to Event slice: bind failed to execute query: pq: invalid reference to FROM-clause entry for table \"event_resource\""
+// func GetEventsForAsset(ctx context.Context, assetID int32, since, until time.Time) ([]*appdb.Event, error) {
+// 	events, err := appdb.Events(
+// 		qm.InnerJoin("booking.event_resource r on r.event_id = booking.event.id"),
+// 		appdb.EventWhere.CancelledAt.IsNull(),
+// 		appdb.EventWhere.EndTime.GT(since),
+// 		appdb.EventWhere.StartTime.LT(until),
+// 		appdb.EventResourceWhere.AssetID.EQ(assetID),
+// 	).AllG(ctx)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("fetching events for asset: %v", err)
+// 	}
+// 	return events, nil
+// }
+
+func CancelEvent(ctx context.Context, eventID int64) error {
 	event, err := appdb.Events(
 		appdb.EventWhere.ID.EQ(eventID),
 	).OneG(ctx)

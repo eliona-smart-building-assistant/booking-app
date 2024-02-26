@@ -37,8 +37,8 @@ func NewBookingAPIService() apiserver.BookingAPIServicer {
 }
 
 // BookingsBookingIdDelete - Cancel a booking
-func (s *BookingAPIService) BookingsBookingIdDelete(ctx context.Context, bookingId string) (apiserver.ImplResponse, error) {
-	if err := conf.CancelEvent(ctx, bookingId); errors.Is(err, conf.ErrNotFound) {
+func (s *BookingAPIService) BookingsBookingIdDelete(ctx context.Context, bookingId int32) (apiserver.ImplResponse, error) {
+	if err := conf.CancelEvent(ctx, int64(bookingId)); errors.Is(err, conf.ErrNotFound) {
 		return apiserver.ImplResponse{Code: http.StatusNotFound}, err
 	} else if err != nil {
 		return apiserver.ImplResponse{Code: http.StatusInternalServerError}, err
@@ -47,7 +47,7 @@ func (s *BookingAPIService) BookingsBookingIdDelete(ctx context.Context, booking
 }
 
 // BookingsBookingIdRegisterGuestPost - Notify event organizer that a guest came for the event.
-func (s *BookingAPIService) BookingsBookingIdRegisterGuestPost(ctx context.Context, bookingId string, bookingsBookingIdRegisterGuestPostRequest apiserver.BookingsBookingIdRegisterGuestPostRequest) (apiserver.ImplResponse, error) {
+func (s *BookingAPIService) BookingsBookingIdRegisterGuestPost(ctx context.Context, bookingId int32, bookingsBookingIdRegisterGuestPostRequest apiserver.BookingsBookingIdRegisterGuestPostRequest) (apiserver.ImplResponse, error) {
 	// Registering guests will not be implemented yet. It is only used in Portier,
 	// which is only in Leicom currently.
 	return apiserver.Response(http.StatusNotImplemented, nil), errors.New("BookingsBookingIdRegisterGuestPost method not implemented")
@@ -84,7 +84,7 @@ func (s *BookingAPIService) BookingsPost(ctx context.Context, req apiserver.Crea
 		return apiserver.Response(http.StatusBadRequest, "End time must be after start time"), errors.New("end time is not after start time")
 	}
 
-	if err = conf.InsertEvent(ctx, req.EventName, req.Description, "OrganizerName", startTime, endTime); err != nil {
+	if err = conf.InsertEvent(ctx, req.AssetIds, req.EventName, req.Description, "OrganizerName", startTime, endTime); err != nil {
 		return apiserver.Response(http.StatusInternalServerError, "Failed to insert event"), fmt.Errorf("error inserting event: %v", err)
 	}
 

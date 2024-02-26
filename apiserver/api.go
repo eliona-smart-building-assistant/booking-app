@@ -37,8 +37,8 @@ type VersionAPIRouter interface {
 // while the service implementation can be ignored with the .openapi-generator-ignore file
 // and updated with the logic required for the API.
 type BookingAPIServicer interface {
-	BookingsBookingIdDelete(context.Context, string) (ImplResponse, error)
-	BookingsBookingIdRegisterGuestPost(context.Context, string, BookingsBookingIdRegisterGuestPostRequest) (ImplResponse, error)
+	BookingsBookingIdDelete(context.Context, int32) (ImplResponse, error)
+	BookingsBookingIdRegisterGuestPost(context.Context, int32, BookingsBookingIdRegisterGuestPostRequest) (ImplResponse, error)
 	BookingsGet(context.Context, string, string, int32) (ImplResponse, error)
 	BookingsPost(context.Context, CreateBookingRequest) (ImplResponse, error)
 }
