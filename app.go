@@ -44,7 +44,8 @@ func initialization() {
 // listenApi starts the API server and listen for requests
 func listenApi() {
 	err := http.ListenAndServe(":"+common.Getenv("API_SERVER_PORT", "3000"), utilshttp.NewCORSEnabledHandler(
-		apiserver.NewRouter(
+		apiservices.NewRouter(
+			apiserver.NewSynchronizationAPIController(apiservices.NewSynchronizationAPIService()),
 			apiserver.NewVersionAPIController(apiservices.NewVersionApiService()),
 			apiserver.NewBookingAPIController(apiservices.NewBookingAPIService()),
 		)),

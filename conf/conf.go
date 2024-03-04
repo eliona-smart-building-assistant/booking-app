@@ -92,8 +92,9 @@ func GetEventsForAsset(ctx context.Context, assetID int32, since, until time.Tim
 
 // This would be better, to have a static type checking. But there is a runtime error:
 // "failed to assign all query results to Event slice: bind failed to execute query: pq: invalid reference to FROM-clause entry for table \"event_resource\""
-// func GetEventsForAsset(ctx context.Context, assetID int32, since, until time.Time) ([]*appdb.Event, error) {
+// func GetEventsForAsset2(ctx context.Context, assetID int32, since, until time.Time) ([]*appdb.Event, error) {
 // 	events, err := appdb.Events(
+// 		qm.Select(),
 // 		qm.InnerJoin("booking.event_resource r on r.event_id = booking.event.id"),
 // 		appdb.EventWhere.CancelledAt.IsNull(),
 // 		appdb.EventWhere.EndTime.GT(since),

@@ -26,11 +26,6 @@ servers:
   - url: http://booking/v1
 
 tags:
-  - name: Configuration
-    description: Configure the app
-    externalDocs:
-      url: https://github.com/eliona-smart-building-assistant/booking-app
-
   - name: Version
     description: API version
     externalDocs:
@@ -38,6 +33,11 @@ tags:
 
   - name: Booking
     description: Booking resources
+    externalDocs:
+      url: https://github.com/eliona-smart-building-assistant/booking-app
+
+  - name: Synchronization
+    description: API to synchronize bookings with external services
     externalDocs:
       url: https://github.com/eliona-smart-building-assistant/booking-app
 
@@ -191,6 +191,51 @@ paths:
         "400":
           description: Bad request - Eliona user not found.
 
+  /sync/bookings:
+    post:
+      tags:
+        - Synchronization
+      summary: Post bookings from external service
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/CreateBookingRequest"
+      responses:
+        "204":
+          description: Bookings created.
+        "404":
+          description: Asset not found.
+        "400":
+          description: Bad request - Eliona user not found.
+  /sync/bookings-subscription:
+    get:
+      tags:
+        - Synchronization
+      operationId: subscribeBookings
+      summary: Open a WebSocket connection to get informed about newly created bookings for given assetIDs.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assetIDs:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookingsListen"
+          description: Successfully opened a connection to bookings WebSocket
+
 components:
   parameters:
     config-id:
@@ -256,3 +301,20 @@ components:
         - start
         - end
         - assetIds
+    BookingsListen:
+      allOf:
+        - description: Information about bookings listener
+          nullable: true
+          properties:
+            statusCode:
+              $ref: "#/components/schemas/StatusCode"
+          type: object
+        - $ref: "#/components/schemas/Booking"
+    StatusCode:
+      description: "The status code expecting when actually perform the operation.\
+        \ Some values are\n- 200: updated (ok) \n- 201: created\n- 204: deleted (no\
+        \ content)\n- 304: unchanged (not modified)\n- 400: problem (bad request)\n\
+        - 404: not found\n- 409: duplicated (conflict)\n- 422: unprocessable\n"
+      example: 200
+      nullable: false
+      type: integer

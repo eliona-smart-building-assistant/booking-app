@@ -24,6 +24,14 @@ type BookingAPIRouter interface {
 	BookingsPost(http.ResponseWriter, *http.Request)
 }
 
+// SynchronizationAPIRouter defines the required methods for binding the api requests to a responses for the SynchronizationAPI
+// The SynchronizationAPIRouter implementation should parse necessary information from the http request,
+// pass the data to a SynchronizationAPIServicer to perform the required actions, then write the service results to the http response.
+type SynchronizationAPIRouter interface {
+	SubscribeBookings(http.ResponseWriter, *http.Request)
+	SyncBookingsPost(http.ResponseWriter, *http.Request)
+}
+
 // VersionAPIRouter defines the required methods for binding the api requests to a responses for the VersionAPI
 // The VersionAPIRouter implementation should parse necessary information from the http request,
 // pass the data to a VersionAPIServicer to perform the required actions, then write the service results to the http response.
@@ -41,6 +49,15 @@ type BookingAPIServicer interface {
 	BookingsBookingIdRegisterGuestPost(context.Context, int32, BookingsBookingIdRegisterGuestPostRequest) (ImplResponse, error)
 	BookingsGet(context.Context, string, string, int32) (ImplResponse, error)
 	BookingsPost(context.Context, CreateBookingRequest) (ImplResponse, error)
+}
+
+// SynchronizationAPIServicer defines the api actions for the SynchronizationAPI service
+// This interface intended to stay up to date with the openapi yaml used to generate it,
+// while the service implementation can be ignored with the .openapi-generator-ignore file
+// and updated with the logic required for the API.
+type SynchronizationAPIServicer interface {
+	SubscribeBookings(context.Context, SubscribeBookingsRequest) (ImplResponse, error)
+	SyncBookingsPost(context.Context, []CreateBookingRequest) (ImplResponse, error)
 }
 
 // VersionAPIServicer defines the api actions for the VersionAPI service
