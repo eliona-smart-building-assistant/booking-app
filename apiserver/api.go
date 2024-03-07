@@ -19,7 +19,6 @@ import (
 // pass the data to a BookingAPIServicer to perform the required actions, then write the service results to the http response.
 type BookingAPIRouter interface {
 	BookingsBookingIdDelete(http.ResponseWriter, *http.Request)
-	BookingsBookingIdRegisterGuestPost(http.ResponseWriter, *http.Request)
 	BookingsGet(http.ResponseWriter, *http.Request)
 	BookingsPost(http.ResponseWriter, *http.Request)
 }
@@ -46,7 +45,6 @@ type VersionAPIRouter interface {
 // and updated with the logic required for the API.
 type BookingAPIServicer interface {
 	BookingsBookingIdDelete(context.Context, int32) (ImplResponse, error)
-	BookingsBookingIdRegisterGuestPost(context.Context, int32, BookingsBookingIdRegisterGuestPostRequest) (ImplResponse, error)
 	BookingsGet(context.Context, string, string, int32) (ImplResponse, error)
 	BookingsPost(context.Context, CreateBookingRequest) (ImplResponse, error)
 }

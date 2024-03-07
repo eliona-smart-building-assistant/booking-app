@@ -55,11 +55,6 @@ func (c *BookingAPIController) Routes() Routes {
 			"/v1/bookings/{bookingId}",
 			c.BookingsBookingIdDelete,
 		},
-		"BookingsBookingIdRegisterGuestPost": Route{
-			strings.ToUpper("Post"),
-			"/v1/bookings/{bookingId}/registerGuest",
-			c.BookingsBookingIdRegisterGuestPost,
-		},
 		"BookingsGet": Route{
 			strings.ToUpper("Get"),
 			"/v1/bookings",
@@ -85,42 +80,6 @@ func (c *BookingAPIController) BookingsBookingIdDelete(w http.ResponseWriter, r 
 		return
 	}
 	result, err := c.service.BookingsBookingIdDelete(r.Context(), bookingIdParam)
-	// If an error occurred, encode the error with the status code
-	if err != nil {
-		c.errorHandler(w, r, err, &result)
-		return
-	}
-	// If no error, encode the body and the result code
-	EncodeJSONResponse(result.Body, &result.Code, w)
-}
-
-// BookingsBookingIdRegisterGuestPost - Notify event organizer that a guest came for the event.
-func (c *BookingAPIController) BookingsBookingIdRegisterGuestPost(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
-	bookingIdParam, err := parseNumericParameter[int32](
-		params["bookingId"],
-		WithRequire[int32](parseInt32),
-	)
-	if err != nil {
-		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
-		return
-	}
-	bookingsBookingIdRegisterGuestPostRequestParam := BookingsBookingIdRegisterGuestPostRequest{}
-	d := json.NewDecoder(r.Body)
-	d.DisallowUnknownFields()
-	if err := d.Decode(&bookingsBookingIdRegisterGuestPostRequestParam); err != nil {
-		c.errorHandler(w, r, &ParsingError{Err: err}, nil)
-		return
-	}
-	if err := AssertBookingsBookingIdRegisterGuestPostRequestRequired(bookingsBookingIdRegisterGuestPostRequestParam); err != nil {
-		c.errorHandler(w, r, err, nil)
-		return
-	}
-	if err := AssertBookingsBookingIdRegisterGuestPostRequestConstraints(bookingsBookingIdRegisterGuestPostRequestParam); err != nil {
-		c.errorHandler(w, r, err, nil)
-		return
-	}
-	result, err := c.service.BookingsBookingIdRegisterGuestPost(r.Context(), bookingIdParam, bookingsBookingIdRegisterGuestPostRequestParam)
 	// If an error occurred, encode the error with the status code
 	if err != nil {
 		c.errorHandler(w, r, err, &result)

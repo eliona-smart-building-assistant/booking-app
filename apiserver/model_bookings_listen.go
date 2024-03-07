@@ -18,6 +18,9 @@ type BookingsListen struct {
 	// The booking ID.
 	Id int32 `json:"id,omitempty"`
 
+	// The IDs of the booked assets.
+	AssetIds []int32 `json:"assetIds,omitempty"`
+
 	// The start datetime of the booking in ISO 8601 format.
 	Start time.Time `json:"start,omitempty"`
 

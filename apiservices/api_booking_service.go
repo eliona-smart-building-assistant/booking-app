@@ -46,13 +46,6 @@ func (s *BookingAPIService) BookingsBookingIdDelete(ctx context.Context, booking
 	return apiserver.Response(http.StatusOK, nil), nil
 }
 
-// BookingsBookingIdRegisterGuestPost - Notify event organizer that a guest came for the event.
-func (s *BookingAPIService) BookingsBookingIdRegisterGuestPost(ctx context.Context, bookingId int32, bookingsBookingIdRegisterGuestPostRequest apiserver.BookingsBookingIdRegisterGuestPostRequest) (apiserver.ImplResponse, error) {
-	// Registering guests will not be implemented yet. It is only used in Portier,
-	// which is only in Leicom currently.
-	return apiserver.Response(http.StatusNotImplemented, nil), errors.New("BookingsBookingIdRegisterGuestPost method not implemented")
-}
-
 // BookingsGet - List bookings
 func (s *BookingAPIService) BookingsGet(ctx context.Context, start string, end string, assetId int32) (apiserver.ImplResponse, error) {
 	since, err := time.Parse(time.RFC3339, start)
