@@ -65,20 +65,8 @@ func (s *BookingAPIService) BookingsGet(ctx context.Context, start string, end s
 
 // BookingsPost - Creates a new booking
 func (s *BookingAPIService) BookingsPost(ctx context.Context, req apiserver.CreateBookingRequest) (apiserver.ImplResponse, error) {
-	startTime, err := time.Parse(time.RFC3339, req.Start)
-	if err != nil {
-		return apiserver.Response(http.StatusBadRequest, "Invalid start time format"), fmt.Errorf("error parsing start time: %v", err)
-	}
-	endTime, err := time.Parse(time.RFC3339, req.End)
-	if err != nil {
-		return apiserver.Response(http.StatusBadRequest, "Invalid end time format"), fmt.Errorf("error parsing end time: %v", err)
-	}
-	if !endTime.After(startTime) {
-		return apiserver.Response(http.StatusBadRequest, "End time must be after start time"), errors.New("end time is not after start time")
-	}
-
-	if err = conf.InsertEvent(ctx, req.AssetIds, req.EventName, req.Description, "OrganizerName", startTime, endTime); err != nil {
-		return apiserver.Response(http.StatusInternalServerError, "Failed to insert event"), fmt.Errorf("error inserting event: %v", err)
+	if err := processBooking(ctx, req); err != nil {
+		return apiserver.Response(http.StatusBadRequest, err.Error()), err
 	}
 
 	for _, assetID := range req.AssetIds {
@@ -88,4 +76,23 @@ func (s *BookingAPIService) BookingsPost(ctx context.Context, req apiserver.Crea
 	}
 
 	return apiserver.Response(http.StatusCreated, "Booking created successfully"), nil
+}
+
+func processBooking(ctx context.Context, req apiserver.CreateBookingRequest) error {
+	startTime, err := time.Parse(time.RFC3339, req.Start)
+	if err != nil {
+		return fmt.Errorf("invalid start time format: %w", err)
+	}
+	endTime, err := time.Parse(time.RFC3339, req.End)
+	if err != nil {
+		return fmt.Errorf("invalid end time format: %w", err)
+	}
+	if !endTime.After(startTime) {
+		return errors.New("end time must be after start time")
+	}
+
+	if err = conf.InsertEvent(ctx, req.AssetIds, req.EventName, req.Description, "OrganizerName", startTime, endTime); err != nil {
+		return fmt.Errorf("failed to insert event: %w", err)
+	}
+	return nil
 }

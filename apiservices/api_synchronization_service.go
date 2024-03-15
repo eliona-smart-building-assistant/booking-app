@@ -18,7 +18,7 @@ package apiservices
 import (
 	"booking-app/apiserver"
 	"context"
-	"errors"
+	"fmt"
 	"net/http"
 )
 
@@ -36,18 +36,11 @@ func (s *SynchronizationAPIService) SubscribeBookings(ctx context.Context, subsc
 }
 
 // SyncBookingsPost - Post bookings from external service
-func (s *SynchronizationAPIService) SyncBookingsPost(ctx context.Context, createBookingRequest []apiserver.CreateBookingRequest) (apiserver.ImplResponse, error) {
-	// TODO - update SyncBookingsPost with the required logic for this service method.
-	// Add api_synchronization_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
-
-	// TODO: Uncomment the next line to return response Response(204, {}) or use other options such as http.Ok ...
-	// return Response(204, nil),nil
-
-	// TODO: Uncomment the next line to return response Response(404, {}) or use other options such as http.Ok ...
-	// return Response(404, nil),nil
-
-	// TODO: Uncomment the next line to return response Response(400, {}) or use other options such as http.Ok ...
-	// return Response(400, nil),nil
-
-	return apiserver.Response(http.StatusNotImplemented, nil), errors.New("SyncBookingsPost method not implemented")
+func (s *SynchronizationAPIService) SyncBookingsPost(ctx context.Context, createBookingsRequest []apiserver.CreateBookingRequest) (apiserver.ImplResponse, error) {
+	for _, req := range createBookingsRequest {
+		if err := processBooking(ctx, req); err != nil {
+			return apiserver.Response(http.StatusBadRequest, err.Error()), err
+		}
+	}
+	return apiserver.Response(http.StatusCreated, fmt.Sprintf("%v bookings created successfully", len(createBookingsRequest))), nil
 }
