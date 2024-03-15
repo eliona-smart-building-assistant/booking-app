@@ -3,6 +3,8 @@ package apiservices
 import (
 	"booking-app/apiserver"
 	"context"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -35,7 +37,7 @@ func NewRouter(routers ...apiserver.Router) *mux.Router {
 func webSocketHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.RequestURI, "bookings-subscription") || strings.Contains(r.RequestURI, "bookings-subscription?") {
-			listen(next, w, r)
+			listen(w, r)
 		} else {
 			next.ServeHTTP(w, r)
 		}
@@ -47,13 +49,12 @@ var upgrader = websocket.Upgrader{
 }
 
 type subscriber struct {
-	msgChan chan []byte
+	conn *websocket.Conn
 }
 
-// todo: handle unsubscribe!
 var assetSubscriptions = make(map[int32][]subscriber)
 
-func listen(next http.Handler, w http.ResponseWriter, r *http.Request) {
+func listen(w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Error("listener", "Error upgrading to WebSocket: %v", err)
@@ -67,7 +68,7 @@ func listen(next http.Handler, w http.ResponseWriter, r *http.Request) {
 	// Read message and wait for close method
 	go func() {
 		for {
-			mType, _, err := conn.ReadMessage()
+			mType, m, err := conn.ReadMessage()
 			if mType == websocket.CloseMessage || isCloseError(err) {
 				log.Debug("listener", "Close listener because of close message from WebSocket for %s", r.RequestURI)
 				cancelFunc() // tells the services method to stop listening for data changes
@@ -78,6 +79,18 @@ func listen(next http.Handler, w http.ResponseWriter, r *http.Request) {
 				cancelFunc() // tells the services method to stop listening for data changes
 				return
 			}
+
+			if mType == websocket.TextMessage {
+				var request apiserver.SubscribeBookingsRequest
+				if err := json.Unmarshal(m, &request); err != nil {
+					log.Error("listener", "Error parsing SubscribeBookingsRequest: %v", err)
+					continue // Skip processing this message
+				}
+
+				for _, assetID := range request.AssetIDs {
+					assetSubscriptions[assetID] = append(assetSubscriptions[assetID], subscriber{conn})
+				}
+			}
 		}
 	}()
 
@@ -86,17 +99,6 @@ func listen(next http.Handler, w http.ResponseWriter, r *http.Request) {
 
 	// Wait for data changes or until the cancelable context is canceled
 	log.Debug("listener", "Start listener for %s", r.RequestURI)
-	go func() {
-		var respWrapper ResponseWriterWrapper
-		next.ServeHTTP(&respWrapper, r.WithContext(context.WithValue(cancelCtx, messageChannelContextKey, msgChan)))
-		if respWrapper.StatusCode == http.StatusOK {
-			_ = conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, string(respWrapper.Data)))
-		} else {
-			log.Error("listener", "Error generating message for WebSocket %s: %d", r.RequestURI, respWrapper.StatusCode)
-			_ = conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseInternalServerErr, string(respWrapper.Data)))
-		}
-		cancelFunc()
-	}()
 
 	// Wait for messages and write the message to WebSocket
 	for {
@@ -129,11 +131,17 @@ type contextKey struct {
 	Name string
 }
 
-func getMessageChannelFromContext(ctx context.Context) chan []byte {
-	if msgChan, ok := ctx.Value(messageChannelContextKey).(chan []byte); ok {
-		return msgChan
+// todo: rm?
+func getMessageChannelFromContext(ctx context.Context) (chan []byte, error) {
+	value := ctx.Value(messageChannelContextKey)
+	if value == nil {
+		return nil, fmt.Errorf("no value found in context")
 	}
-	return nil
+	msgChan, ok := value.(chan []byte)
+	if !ok {
+		return nil, fmt.Errorf("unexpected type in context for key '%v': got %T with value %v, want chan []byte", messageChannelContextKey, value, value)
+	}
+	return msgChan, nil
 }
 
 type ResponseWriterWrapper struct {

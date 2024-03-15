@@ -31,11 +31,8 @@ func NewSynchronizationAPIService() apiserver.SynchronizationAPIServicer {
 
 // SubscribeBookings - Open a WebSocket connection to get informed about newly created bookings.
 func (s *SynchronizationAPIService) SubscribeBookings(ctx context.Context, subscribeBookingsRequest apiserver.SubscribeBookingsRequest) (apiserver.ImplResponse, error) {
-	msgChan := getMessageChannelFromContext(ctx)
-	for _, assetID := range subscribeBookingsRequest.AssetIDs {
-		assetSubscriptions[assetID] = append(assetSubscriptions[assetID], subscriber{msgChan})
-	}
-	return apiserver.Response(http.StatusOK, nil), nil
+	// This method should be handled by websocket instead.
+	return apiserver.Response(http.StatusTeapot, nil), nil
 }
 
 // SyncBookingsPost - Post bookings from external service

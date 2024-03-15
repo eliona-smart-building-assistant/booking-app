@@ -81,5 +81,11 @@ func (s *BookingAPIService) BookingsPost(ctx context.Context, req apiserver.Crea
 		return apiserver.Response(http.StatusInternalServerError, "Failed to insert event"), fmt.Errorf("error inserting event: %v", err)
 	}
 
+	for _, assetID := range req.AssetIds {
+		for _, subscriber := range assetSubscriptions[assetID] {
+			subscriber.conn.WriteJSON(req)
+		}
+	}
+
 	return apiserver.Response(http.StatusCreated, "Booking created successfully"), nil
 }
