@@ -91,7 +91,7 @@ func processBooking(ctx context.Context, req apiserver.CreateBookingRequest) err
 		return errors.New("end time must be after start time")
 	}
 
-	if err = conf.InsertEvent(ctx, req.AssetIds, req.EventName, req.Description, req.OrganizerID, startTime, endTime); err != nil {
+	if err = conf.InsertEvent(ctx, req.AssetIds, req.OrganizerID, startTime, endTime); err != nil {
 		return fmt.Errorf("failed to insert event: %w", err)
 	}
 	return nil

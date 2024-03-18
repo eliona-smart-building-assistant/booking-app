@@ -17,8 +17,6 @@ create schema if not exists booking;
 
 create table booking.event (
     id bigserial primary key,
-    title varchar(255) not null,
-    description text not null,
     organizer text not null,
     start_time timestamp with time zone not null,
     end_time timestamp with time zone not null,

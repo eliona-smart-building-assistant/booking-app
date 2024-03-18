@@ -25,8 +25,6 @@ import (
 // Event is an object representing the database table.
 type Event struct {
 	ID          int64     `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Title       string    `boil:"title" json:"title" toml:"title" yaml:"title"`
-	Description string    `boil:"description" json:"description" toml:"description" yaml:"description"`
 	Organizer   string    `boil:"organizer" json:"organizer" toml:"organizer" yaml:"organizer"`
 	StartTime   time.Time `boil:"start_time" json:"start_time" toml:"start_time" yaml:"start_time"`
 	EndTime     time.Time `boil:"end_time" json:"end_time" toml:"end_time" yaml:"end_time"`
@@ -39,8 +37,6 @@ type Event struct {
 
 var EventColumns = struct {
 	ID          string
-	Title       string
-	Description string
 	Organizer   string
 	StartTime   string
 	EndTime     string
@@ -48,8 +44,6 @@ var EventColumns = struct {
 	CancelledAt string
 }{
 	ID:          "id",
-	Title:       "title",
-	Description: "description",
 	Organizer:   "organizer",
 	StartTime:   "start_time",
 	EndTime:     "end_time",
@@ -59,8 +53,6 @@ var EventColumns = struct {
 
 var EventTableColumns = struct {
 	ID          string
-	Title       string
-	Description string
 	Organizer   string
 	StartTime   string
 	EndTime     string
@@ -68,8 +60,6 @@ var EventTableColumns = struct {
 	CancelledAt string
 }{
 	ID:          "event.id",
-	Title:       "event.title",
-	Description: "event.description",
 	Organizer:   "event.organizer",
 	StartTime:   "event.start_time",
 	EndTime:     "event.end_time",
@@ -176,8 +166,6 @@ func (w whereHelpernull_Time) IsNotNull() qm.QueryMod { return qmhelper.WhereIsN
 
 var EventWhere = struct {
 	ID          whereHelperint64
-	Title       whereHelperstring
-	Description whereHelperstring
 	Organizer   whereHelperstring
 	StartTime   whereHelpertime_Time
 	EndTime     whereHelpertime_Time
@@ -185,8 +173,6 @@ var EventWhere = struct {
 	CancelledAt whereHelpernull_Time
 }{
 	ID:          whereHelperint64{field: "\"booking\".\"event\".\"id\""},
-	Title:       whereHelperstring{field: "\"booking\".\"event\".\"title\""},
-	Description: whereHelperstring{field: "\"booking\".\"event\".\"description\""},
 	Organizer:   whereHelperstring{field: "\"booking\".\"event\".\"organizer\""},
 	StartTime:   whereHelpertime_Time{field: "\"booking\".\"event\".\"start_time\""},
 	EndTime:     whereHelpertime_Time{field: "\"booking\".\"event\".\"end_time\""},
@@ -222,8 +208,8 @@ func (r *eventR) GetEventResources() EventResourceSlice {
 type eventL struct{}
 
 var (
-	eventAllColumns            = []string{"id", "title", "description", "organizer", "start_time", "end_time", "created_at", "cancelled_at"}
-	eventColumnsWithoutDefault = []string{"title", "description", "organizer", "start_time", "end_time"}
+	eventAllColumns            = []string{"id", "organizer", "start_time", "end_time", "created_at", "cancelled_at"}
+	eventColumnsWithoutDefault = []string{"organizer", "start_time", "end_time"}
 	eventColumnsWithDefault    = []string{"id", "created_at", "cancelled_at"}
 	eventPrimaryKeyColumns     = []string{"id"}
 	eventGeneratedColumns      = []string{}

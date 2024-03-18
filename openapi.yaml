@@ -251,12 +251,6 @@ components:
           type: string
           description: The end datetime of the booking in ISO 8601 format.
           example: "2023-01-01T18:00:00Z"
-        eventName:
-          type: string
-          description: The name of the event. (Optional)
-        description:
-          type: string
-          description: A description of the event or booking. (Optional)
       required:
         - organizerID
         - start

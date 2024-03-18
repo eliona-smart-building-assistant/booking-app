@@ -16,6 +16,7 @@
 package conf
 
 import (
+	"booking-app/apiserver"
 	"booking-app/appdb"
 	"context"
 	"database/sql"
@@ -31,14 +32,12 @@ import (
 var ErrBadRequest = errors.New("bad request")
 var ErrNotFound = errors.New("not found")
 
-func InsertEvent(ctx context.Context, assetIDs []int32, title, description, organizer string, startTime, endTime time.Time) error {
+func InsertEvent(ctx context.Context, assetIDs []int32, organizer string, startTime, endTime time.Time) error {
 	dbEvent := &appdb.Event{
-		Title:       title,
-		Description: description,
-		Organizer:   organizer,
-		StartTime:   startTime,
-		EndTime:     endTime,
-		CreatedAt:   time.Now(),
+		Organizer: organizer,
+		StartTime: startTime,
+		EndTime:   endTime,
+		CreatedAt: time.Now(),
 	}
 
 	// Using a transaction to ensure atomicity of the insert operations
@@ -66,17 +65,7 @@ func InsertEvent(ctx context.Context, assetIDs []int32, title, description, orga
 	return tx.Commit()
 }
 
-func GetEventByID(ctx context.Context, eventID int64) (*appdb.Event, error) {
-	event, err := appdb.Events(
-		appdb.EventWhere.ID.EQ(eventID),
-	).OneG(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("fetching event: %v", err)
-	}
-	return event, nil
-}
-
-func GetEventsForAsset(ctx context.Context, assetID int32, since, until time.Time) ([]*appdb.Event, error) {
+func GetEventsForAsset(ctx context.Context, assetID int32, since, until time.Time) ([]apiserver.Booking, error) {
 	events, err := appdb.Events(
 		qm.InnerJoin("booking.event_resource r on r.event_id = booking.event.id"),
 		qm.Where("booking.event.cancelled_at IS NULL"),
@@ -87,7 +76,34 @@ func GetEventsForAsset(ctx context.Context, assetID int32, since, until time.Tim
 	if err != nil {
 		return nil, fmt.Errorf("fetching events for asset: %v", err)
 	}
-	return events, nil
+	var apiBookings []apiserver.Booking
+	for _, e := range events {
+		b, err := dbEventToAPIBooking(ctx, *e)
+		if err != nil {
+			return nil, fmt.Errorf("dbEvent to API booking: %v", err)
+		}
+		apiBookings = append(apiBookings, b)
+	}
+	return apiBookings, nil
+}
+
+func dbEventToAPIBooking(ctx context.Context, e appdb.Event) (apiserver.Booking, error) {
+	res, err := e.EventResources().AllG(ctx)
+	if err != nil {
+		return apiserver.Booking{}, fmt.Errorf("fetching resources for event %v: %v", e.ID, err)
+	}
+	var assetIDs []int32
+	for _, r := range res {
+		assetIDs = append(assetIDs, r.AssetID)
+		fmt.Println(assetIDs)
+	}
+	return apiserver.Booking{
+		Id:          int32(e.ID),
+		AssetIds:    assetIDs,
+		Start:       e.StartTime,
+		End:         e.EndTime,
+		OrganizerID: e.Organizer,
+	}, nil
 }
 
 // This would be better, to have a static type checking. But there is a runtime error:

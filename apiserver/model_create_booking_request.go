@@ -22,12 +22,6 @@ type CreateBookingRequest struct {
 
 	// The end datetime of the booking in ISO 8601 format.
 	End string `json:"end"`
-
-	// The name of the event. (Optional)
-	EventName string `json:"eventName,omitempty"`
-
-	// A description of the event or booking. (Optional)
-	Description string `json:"description,omitempty"`
 }
 
 // AssertCreateBookingRequestRequired checks if the required fields are not zero-ed
