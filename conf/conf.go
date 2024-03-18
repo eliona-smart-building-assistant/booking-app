@@ -32,6 +32,45 @@ import (
 var ErrBadRequest = errors.New("bad request")
 var ErrNotFound = errors.New("not found")
 
+func GetConfig(ctx context.Context) (apiserver.Configuration, error) {
+	dbConfig, err := appdb.Configurations().OneG(ctx)
+	if err != nil {
+		return apiserver.Configuration{}, fmt.Errorf("fetching config from database: %v", err)
+	}
+	if dbConfig == nil {
+		return apiserver.Configuration{}, ErrBadRequest
+	}
+	return apiConfigFromDbConfig(*dbConfig), nil
+}
+
+func UpsertConfig(ctx context.Context, config apiserver.Configuration) (apiserver.Configuration, error) {
+	dbConfig := dbConfigFromApiConfig(config)
+	dbConfig.ID = 1
+	if err := dbConfig.UpsertG(ctx, true, []string{"id"}, boil.Blacklist("id"), boil.Infer()); err != nil {
+		return apiserver.Configuration{}, fmt.Errorf("upserting DB config: %v", err)
+	}
+	return config, nil
+}
+
+func dbConfigFromApiConfig(apiConfig apiserver.Configuration) appdb.Configuration {
+	return appdb.Configuration{
+		ID:                 1,
+		StartBookableHours: apiConfig.DayStartHours,
+		StartBookableMins:  apiConfig.DayStartMins,
+		EndBookableHours:   apiConfig.DayEndHours,
+		EndBookableMins:    apiConfig.DayEndMins,
+	}
+}
+
+func apiConfigFromDbConfig(dbConfig appdb.Configuration) apiserver.Configuration {
+	return apiserver.Configuration{
+		DayStartHours: dbConfig.StartBookableHours,
+		DayStartMins:  dbConfig.StartBookableMins,
+		DayEndHours:   dbConfig.EndBookableHours,
+		DayEndMins:    dbConfig.EndBookableMins,
+	}
+}
+
 func InsertEvent(ctx context.Context, assetIDs []int32, organizer string, startTime, endTime time.Time) error {
 	dbEvent := &appdb.Event{
 		Organizer: organizer,

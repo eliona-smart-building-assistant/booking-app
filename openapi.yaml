@@ -26,6 +26,11 @@ servers:
   - url: http://booking/v1
 
 tags:
+  - name: Configuration
+    description: Configure the app
+    externalDocs:
+      url: https://github.com/eliona-smart-building-assistant/booking-app
+
   - name: Version
     description: API version
     externalDocs:
@@ -42,6 +47,39 @@ tags:
       url: https://github.com/eliona-smart-building-assistant/booking-app
 
 paths:
+  /config:
+    get:
+      tags:
+        - Configuration
+      summary: Get configuration
+      description: Gets information about configuration.
+      operationId: getConfiguration
+      responses:
+        "200":
+          description: Successfully returned configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Configuration"
+    put:
+      tags:
+        - Configuration
+      summary: Puts a configuration
+      description: Creates or updates a configuration.
+      operationId: putConfiguration
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Configuration"
+      responses:
+        "201":
+          description: Successfully put a configuration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Configuration"
+
   /version:
     get:
       summary: Version of the API
@@ -205,6 +243,22 @@ components:
         format: int64
         example: 4711
   schemas:
+    Configuration:
+      type: object
+      description: Defines configuration of bookings app.
+      properties:
+        dayStartHours:
+          type: integer
+          description: Start of bookable time (hours).
+        dayStartMins:
+          type: integer
+          description: Start of bookable time (mins).
+        dayEndHours:
+          type: integer
+          description: End of bookable time (hours).
+        dayEndMins:
+          type: integer
+          description: End of bookable time (mins).
     Booking:
       type: object
       properties:
