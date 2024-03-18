@@ -104,18 +104,7 @@ func InsertEvent(ctx context.Context, assetIDs []int32, organizer string, startT
 	return tx.Commit()
 }
 
-func GetEventsForAsset(ctx context.Context, assetID int32, since, until time.Time) (apiserver.BookingsList, error) {
-	bookings, err := getEventsForAsset(ctx, assetID, since, until)
-	if err != nil {
-		return apiserver.BookingsList{}, err
-	}
-	return apiserver.BookingsList{
-		Utilization: 128, // TODO: Unmock!
-		Bookings:    bookings,
-	}, nil
-}
-
-func getEventsForAsset(ctx context.Context, assetID int32, since, until time.Time) ([]apiserver.Booking, error) {
+func GetEventsForAsset(ctx context.Context, assetID int32, since, until time.Time) ([]apiserver.Booking, error) {
 	events, err := appdb.Events(
 		qm.InnerJoin("booking.event_resource r on r.event_id = booking.event.id"),
 		qm.Where("booking.event.cancelled_at IS NULL"),
@@ -145,6 +134,7 @@ func dbEventToAPIBooking(ctx context.Context, e appdb.Event) (apiserver.Booking,
 	var assetIDs []int32
 	for _, r := range res {
 		assetIDs = append(assetIDs, r.AssetID)
+		fmt.Println(assetIDs)
 	}
 	return apiserver.Booking{
 		Id:          int32(e.ID),
