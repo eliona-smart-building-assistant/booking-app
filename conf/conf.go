@@ -26,6 +26,7 @@ import (
 
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
+	"github.com/volatiletech/sqlboiler/v4/queries"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
@@ -180,4 +181,77 @@ func CancelEvent(ctx context.Context, eventID int64) error {
 	}
 
 	return nil
+}
+
+// func GetCurrentEvents(ctx context.Context) ([]apiserver.Booking, error) {
+// 	since := time.Now()
+// 	until := since.Add(30 * time.Minute)
+// 	events, err := appdb.Events(
+// 		appdb.EventWhere.CancelledAt.IsNull(),
+// 		appdb.EventWhere.EndTime.GTE(since),
+// 		appdb.EventWhere.StartTime.LTE(until),
+// 	).AllG(ctx)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("fetching events for asset: %v", err)
+// 	}
+// 	var apiBookings []apiserver.Booking
+// 	for _, e := range events {
+// 		b, err := dbEventToAPIBooking(ctx, *e)
+// 		if err != nil {
+// 			return nil, fmt.Errorf("dbEvent to API booking: %v", err)
+// 		}
+// 		apiBookings = append(apiBookings, b)
+// 	}
+// 	return apiBookings, nil
+// }
+
+type AssetID struct {
+	AssetID int32 `boil:"asset_id"`
+}
+
+func GetBookedAssetIDs(ctx context.Context) ([]int32, error) {
+	since := time.Now()
+	until := since.Add(30 * time.Minute)
+	var assetIDs []*AssetID
+	if err := queries.
+		RawG(`
+			SELECT DISTINCT er.asset_id
+			FROM booking.event_resource er
+			JOIN booking.event e ON e.id = er.event_id
+			WHERE e.cancelled_at IS NULL
+				AND e.start_time <= $1
+				AND e.end_time >= $2
+			`, until, since).
+		BindG(ctx, &assetIDs); err != nil {
+		return nil, fmt.Errorf("querying booked asset IDs: %v", err)
+	}
+
+	ids := make([]int32, len(assetIDs))
+	for i, assetID := range assetIDs {
+		ids[i] = assetID.AssetID
+	}
+	return ids, nil
+}
+
+func GetUnbookedAssetIDs(ctx context.Context) ([]int32, error) {
+	since := time.Now()
+	until := since.Add(30 * time.Minute)
+	var assetIDs []*AssetID
+	if err := queries.
+		RawG(`
+			SELECT DISTINCT er.asset_id
+			FROM booking.event_resource er
+			JOIN booking.event e ON e.id = er.event_id
+			WHERE e.cancelled_at IS NOT NULL
+				OR e.start_time > $1
+				OR e.end_time < $2
+			`, until, since).
+		BindG(ctx, &assetIDs); err != nil {
+		return nil, fmt.Errorf("querying unbooked asset IDs: %v", err)
+	}
+	ids := make([]int32, len(assetIDs))
+	for i, assetID := range assetIDs {
+		ids[i] = assetID.AssetID
+	}
+	return ids, nil
 }

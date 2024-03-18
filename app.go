@@ -18,6 +18,8 @@ package main
 import (
 	"booking-app/apiserver"
 	"booking-app/apiservices"
+	"booking-app/conf"
+	"booking-app/eliona"
 	"context"
 	"net/http"
 
@@ -27,6 +29,37 @@ import (
 	utilshttp "github.com/eliona-smart-building-assistant/go-utils/http"
 	"github.com/eliona-smart-building-assistant/go-utils/log"
 )
+
+func manageOccupancy() {
+	common.RunOnce(func() {
+		if err := updateOccupancy(); err != nil {
+			return // Error is handled in the method itself.
+		}
+	}, 1)
+}
+
+func updateOccupancy() error {
+	ctx := context.Background()
+	bookedAssets, err := conf.GetBookedAssetIDs(ctx)
+	if err != nil {
+		log.Error("conf", "getting booked asset IDs: %v", err)
+		return err
+	}
+	if err := eliona.SetAssetsBooked(true, bookedAssets); err != nil {
+		log.Error("eliona", "setting booked assets: %v", err)
+		return err
+	}
+	unbookedAssets, err := conf.GetUnbookedAssetIDs(ctx)
+	if err != nil {
+		log.Error("conf", "getting booked asset IDs: %v", err)
+		return err
+	}
+	if err := eliona.SetAssetsBooked(false, unbookedAssets); err != nil {
+		log.Error("eliona", "setting unbooked assets: %v", err)
+		return err
+	}
+	return nil
+}
 
 func initialization() {
 	ctx := context.Background()
