@@ -144,9 +144,8 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Booking"
+                $ref: "#/components/schemas/BookingsList"
+
     post:
       tags:
         - Booking
@@ -286,6 +285,16 @@ components:
         organizerName:
           type: string
           description: The name of the organizer.
+    BookingsList:
+      type: object
+      properties:
+        utilization:
+          type: integer
+          description: The utilization of the resource in percent.
+        bookings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Booking"
     CreateBookingRequest:
       type: object
       properties:
