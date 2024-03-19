@@ -35,11 +35,11 @@ var ErrNotFound = errors.New("not found")
 
 func GetConfig(ctx context.Context) (apiserver.Configuration, error) {
 	dbConfig, err := appdb.Configurations().OneG(ctx)
+	if errors.Is(err, sql.ErrNoRows) {
+		return apiserver.Configuration{}, ErrNotFound
+	}
 	if err != nil {
 		return apiserver.Configuration{}, fmt.Errorf("fetching config from database: %v", err)
-	}
-	if dbConfig == nil {
-		return apiserver.Configuration{}, ErrBadRequest
 	}
 	return apiConfigFromDbConfig(*dbConfig), nil
 }

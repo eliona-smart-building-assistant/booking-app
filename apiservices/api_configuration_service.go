@@ -19,6 +19,7 @@ import (
 	"booking-app/apiserver"
 	"booking-app/conf"
 	"context"
+	"errors"
 	"net/http"
 )
 
@@ -36,6 +37,9 @@ func NewConfigurationAPIService() apiserver.ConfigurationAPIServicer {
 // GetConfiguration - Get configuration
 func (s *ConfigurationAPIService) GetConfiguration(ctx context.Context) (apiserver.ImplResponse, error) {
 	config, err := conf.GetConfig(ctx)
+	if errors.Is(err, conf.ErrNotFound) {
+		return apiserver.ImplResponse{Code: http.StatusNotFound}, nil
+	}
 	if err != nil {
 		return apiserver.ImplResponse{Code: http.StatusInternalServerError}, err
 	}
