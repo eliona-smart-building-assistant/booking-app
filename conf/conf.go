@@ -209,18 +209,23 @@ type AssetID struct {
 	AssetID int32 `boil:"asset_id"`
 }
 
+const bookedAsssetsCTE = `
+	WITH booked_assets AS (
+		SELECT DISTINCT er.asset_id
+		FROM booking.event_resource er
+		JOIN booking.event e ON e.id = er.event_id
+		WHERE e.cancelled_at IS NULL
+			AND e.start_time <= $1
+			AND e.end_time >= $2
+	)`
+
 func GetBookedAssetIDs(ctx context.Context) ([]int32, error) {
 	since := time.Now()
 	until := since.Add(30 * time.Minute)
 	var assetIDs []*AssetID
 	if err := queries.
-		RawG(`
-			SELECT DISTINCT er.asset_id
-			FROM booking.event_resource er
-			JOIN booking.event e ON e.id = er.event_id
-			WHERE e.cancelled_at IS NULL
-				AND e.start_time <= $1
-				AND e.end_time >= $2
+		RawG(bookedAsssetsCTE+`
+				SELECT asset_id FROM booked_assets
 			`, until, since).
 		BindG(ctx, &assetIDs); err != nil {
 		return nil, fmt.Errorf("querying booked asset IDs: %v", err)
@@ -238,13 +243,10 @@ func GetUnbookedAssetIDs(ctx context.Context) ([]int32, error) {
 	until := since.Add(30 * time.Minute)
 	var assetIDs []*AssetID
 	if err := queries.
-		RawG(`
-			SELECT DISTINCT er.asset_id
-			FROM booking.event_resource er
-			JOIN booking.event e ON e.id = er.event_id
-			WHERE e.cancelled_at IS NOT NULL
-				OR e.start_time > $1
-				OR e.end_time < $2
+		RawG(bookedAsssetsCTE+`
+				SELECT DISTINCT asset_id
+				FROM booking.event_resource
+				WHERE asset_id NOT IN (SELECT asset_id FROM booked_assets);
 			`, until, since).
 		BindG(ctx, &assetIDs); err != nil {
 		return nil, fmt.Errorf("querying unbooked asset IDs: %v", err)
